@@ -2,9 +2,8 @@
 
 ## 1、操作 dom 节点
 
-     1）
-
 ```js
+  1）
 const myButton = document.getElementById("addDataId");
 const father = document.getElementById("father");
 father.childNodes[1].appendChild(myButton);
@@ -60,9 +59,13 @@ JS 的运行时间为 38ms,但渲染完成后的总时间为 957ms。
 从 Performance 可以看出，代码从执行到渲染结束，共消耗了 960.8ms,其中的主要时间消耗如下：
 
 Event(click) : 40.84ms
+
 Recalculate Style : 105.08ms
+
 Layout : 731.56ms
+
 Update Layer Tree : 58.87ms
+
 Paint : 15.32ms
 
 从这里我们可以看出，我们的代码的执行过程中，消耗时间最多的两个阶段是 Recalculate Style 和 Layout。
@@ -82,8 +85,11 @@ Layout：布局，知道元素应用哪些规则之后，浏览器开始计算�
 因此他的实现逻辑是 页面加载时实现可视区域的 item 加载，当滚动发生时，动态通过计算获得可视区域内的列表项，并将非可视区域内存在的列表项删除。
 为了实现计算我们需要以下几项
 1、计算当前可视区域的起始数据索引（startIndex）
+
 2、计算当前可视区域的末尾数据索引（endIndex）
+
 3、可视区域的数据，渲染到可视区域
+
 4、计算起始数据索引 在整个列表数据索引中的偏移位置（startOffset）并且设置到列表中
 因此整个可视区域的渲染结构如下
 
@@ -100,32 +106,52 @@ Layout：布局，知道元素应用哪些规则之后，浏览器开始计算�
 ```
 
 1）infinite-list-container 为可视区域的容器
+
 2）infinite-list-phantom 为容器内的占位，高度为总列表高度，用于形成滚动条
+
 3）infinite-list 为列表项的渲染区域
 监听 infinite-list-container 的 scroll 事件，获取滚动位置 scrollTop
+
 1）假定可视区域高度固定，称之为 screenHeight
+
 2）假定列表每项高度固定，称之为 itemSize
+
 3）假定列表数据称之为 listData
+
 4）假定当前滚动位置称之为 scrollTop
+
 由此可得出计算关系
 1、列表总高度 listHeight = listData.length \* itemSize
+
 2、可显示的列表项数 visibleCount = Math.ceil(screenHeight / itemSize)
+
 3、数据的起始索引 startIndex = Math.floor(scrollTop / itemSize)
+
 4、数据的结束索引 endIndex = startIndex + visibleCount
+
 5、列表显示数据为 visibleData = listData.slice(startIndex,endIndex)
+
 当滚动后，由于渲染区域相对于可视区域已经发生了偏移，此时我需要获取一个偏移量 startOffset，通过样式控制将渲染区域偏移至可视区域中。
 偏移量 startOffset = scrollTop - (scrollTop % itemSize);
 
 扩展 当需要渲染的 item 高度不固定时
+
 以预估高度先行渲染，然后获取真实高度并缓存。
+
 定义组件属性 estimatedItemSize,用于接收预估高度
+
+```js
 props: {
-//预估高度
-estimatedItemSize:{
-type:Number
+  //预估高度
+  estimatedItemSize: {
+    type: Number;
+  }
 }
-}
+```
+
 并在初始时根据 estimatedItemSize 对 positions 进行初始化。
+
+```js
 initPositions(){
 this.positions = this.listData.map((item,index)=>{
 return {
@@ -136,11 +162,17 @@ bottom:(index + 1) _ this.estimatedItemSize
 }
 })
 }
+```
+
 由于列表项高度不定，并且我们维护了 positions，用于记录每一项的位置，而列表高度实际就等于列表中最后一项的底部距离列表顶部的位置。
+
+```js
 //列表总高度
 listHeight(){
 return this.positions[this.positions.length - 1].bottom;
 }
+```
+
 由于需要在渲染完成后，获取列表每项的位置信息并缓存，所以使用钩子函数 updated 来实现：
 
 ```js
