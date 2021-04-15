@@ -6,6 +6,7 @@
   - [js 设计模式](stratrgy.md)
   - [高频笔试](showMeCode.md)
   - [promise 手写](promise.md)
+  - [JavaScript 原型继承之精髓](constructor.md)
 
 - CSS
 
