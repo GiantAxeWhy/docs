@@ -284,3 +284,382 @@ constructor 是什么东西？用来干啥？
 ## 深入 JavaScript 原型继承原理——babel 编译码解读
 
 https://juejin.cn/post/6844903696887709709
+
+### 无继承——简单的 class+字段声明
+
+使用 class 关键字
+并定义了一个变量
+
+```js
+class Animal(){
+  constructor(name) {
+    this.name = name || 'Kat'
+  }
+}
+```
+
+最后 babel 编译出来的代码如下。
+
+```js
+"use strict";
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var Animal = function Animal(name) {
+  this, Animal;
+
+  this.name = name || "Kat";
+};
+```
+
+有两个值得注意
+
+使用 class 声明的 Animal 最后其实是被编译为一个函数。证明 class 跟类没关系，只是个语法糖。
+另外
+编译器帮我们插入了一个\_classCallCheck 函数调用，它会检查你有没有用 new Animal() 操作符来初始化这个函数。
+若有，则 this 会是被实例化的 Animal 对象，自然能通过 animal instanceof Animal 检查；若是直接调用函数，this 会被初始化为全局对象，自然不会是 Animal 实例，从而抛出运行时错误。这个检查，正解决了提到的问题：如果忘记使用 new 去调用一个被设计构造函数的函数，没有任何运行时错误的毛病。
+
+### 无继承——简单的 class+方法声明
+
+给上个例子添加两个方法
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name || "Kat";
+  }
+
+  move() {}
+  getName() {
+    return this.name;
+  }
+}
+```
+
+编译如下
+
+```js
+"use strict";
+
+var _createClass = (function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+})();
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var Animal = (function () {
+  function Animal(name) {
+    _classCallCheck(this, Animal);
+
+    this.name = name || "Kat";
+  }
+
+  _createClass(Animal, [
+    {
+      key: "move",
+      value: function move() {},
+    },
+    {
+      key: "getName",
+      value: function getName() {
+        return this.name;
+      },
+    },
+  ]);
+
+  return Animal;
+})();
+```
+
+例子长了不少，但其实主要的变化只有两个：一是 Animal 被包了一层而不是直接返回；
+
+二是新增的方法 move 和 getName 是通过一个 \_createClass() 方法来实现的。
+
+它将两个方法以 key/value 的形式作为数组传入，看起来，是要把它们设置到 Animal 的原型链上面，以便后续继承之用。
+
+为啥 Animal 被包了一层呢，这是个好问题，但答案我们将留到后文揭晓。现在，我们先看一下这个长长的 \_createClass 实现是什么：
+
+它是个立即执行函数，执行又返回了另一个函数。说明啥，一定用了闭包，说明里面要封装些「私有」变量，那就是 defineProperties 这个函数。
+
+这很好，一是这个函数只会生成一次，二是明确了这个函数只与 \_createClass 这个事情相关。
+
+再细看这个返回的函数，接受 Constructor、protoProps 和 staticProps 三个参数。staticProps 我们暂时不会用到，回头再讲；我们传入的数组是通过 protoProps 接受的。
+
+接下来，看一下 defineProperties 做了啥事。
+
+它将每一个传进来的 props 做了如下处理：分别设置了他们的 enumerable、configurable、writable 属性。
+
+而传进来的 target 是 Animal.prototype，相当于，这个函数最后的执行效果会是这样：
+
+```js
+function defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    // 前面处理其实得到这样这个 descriptor 对象：
+    var descriptor = {
+      ...props[i],
+      enumerable: false,
+      configurable: true,
+      writable: true,
+    };
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+```
+
+看到这里就很明白了，它就是把你定义的 move、getName 方法通过 Object.defineProperty 方法设置到 Animal.prototype 上去。
+
+前面我们说过，prototype 是用来存储公共属性的。也就是说，这两个方法在你使用继承的时候，可以被子对象通过原型链上溯访问到。
+
+也就是说，我们这个小小的例子里，声明的两个方法已经具备了继承能力了。
+
+至于 enumerable、configurable、writable 属性是什么东西呢，查一下语言规范就知道了。
+
+简单来说，writable 为 false 时，其值不能通过 setter 改变；enumerable 为 false 时，不能出现在 for-in 循环中。当然，这里是粗浅的理解，暂时不是这篇文章的重点。
+
+### 简单继承——一层继承 + 字段覆盖
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name || "Kat";
+  }
+}
+
+class Tiger extends Animal {
+  constructor(name, type) {
+    super(name);
+    this.type = type || "Paper";
+  }
+}
+```
+
+加一层继承和字段覆盖能看到啥东西呢？能看到继承底下的实现机制是怎么样的，以及它的 constructor 和 **proto** 属性将如何被正确设置。
+
+带着这两个问题，我们一起来看下编译后的源码：
+
+```js
+"use strict";
+
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError(
+      "this hasn't been initialised - super() hasn't been called"
+    );
+  }
+  return call && (typeof call === "object" || typeof call === "function")
+    ? call
+    : self;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError(
+      "Super expression must either be null or a function, not " +
+        typeof superClass
+    );
+  }
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    },
+  });
+  if (superClass)
+    Object.setPrototypeOf
+      ? Object.setPrototypeOf(subClass, superClass)
+      : (subClass.__proto__ = superClass);
+}
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var Animal = function Animal(name) {
+  _classCallCheck(this, Animal);
+
+  this.name = name || "Kat";
+};
+
+var Tiger = (function (_Animal) {
+  _inherits(Tiger, _Animal);
+
+  function Tiger(name, type) {
+    _classCallCheck(this, Tiger);
+
+    var _this = _possibleConstructorReturn(
+      this,
+      (Tiger.__proto__ || Object.getPrototypeOf(Tiger)).call(this, name)
+    );
+
+    _this.type = type || "Paper";
+    return _this;
+  }
+
+  return Tiger;
+})(Animal);
+```
+
+相比无继承的代码，这里主要增加了几个函数。\_possibleConstructorReturn 顾名思义，可能不是很重要，回头再读。精华在 \_inherits(Tiger, Animal) 这个函数，我们按顺序来读一下。首先是一段异常处理，简单地检查了 superClass 要么是个函数，要么得是个 null。也就是说，如果你这样写那是不行的：
+
+```js
+const Something = "not-a-function";
+class Animal extends Something {}
+// Error: Super expression must either be null or a function, not string
+```
+
+接下来这句代码将 prototype 和 constructor 一并设置到位，是精华。注意，这个地方留个问题：为什么要用 Object.create(superClass.prototype)，而不是直接这么写：
+
+```js
+function _inherits(subClass, superClass) {
+  subClass.prototype = superClass && superClass.prototype
+  subClass.prototype.constructor = { ... }
+}
+
+```
+
+很明显，是为了避免任何对 subClass.prototype 的修改影响到 superClass.prototype。使用 Object.create(asPrototype) 出来的对象，其实上是将 subClass.prototype.**proto** = superClass.prototype，这样 subClass 也就继承了 superClass，可以达到这样两个目的：
+1、当查找到 subClass 上没有的属性时，会自动往 superClass 上找；这样 superClass.prototype 原型上发生的修改都能实时反映到 subClass 上
+
+2、subClass.prototype 本身是个新的对象，可以存放 subClass 自己的属性，这样 subClass.prototype 上的任何修改不会影响到 superClass.prototype
+
+最后，如果 superClass 不为空，那么将 subClass.**proto** 设置为 superClass。这点我并不是很理解。
+
+至此，一个简单的继承就完成了。在使用了 extends 关键字后，实际上背后发生的事情是：
+
+子「类」prototype 上的 **proto** 被正确设置，指向父「类」的 prototype: subClass.prototype = { **proto**: superClass.prototype }
+
+子「类」prototype 上的 constructor 被正确初始化，这样 instanceof 关系能得到正确结果
+
+### 无继承——静态函数
+
+看一个简单的代码：
+
+```js
+class Animal {
+  static create() {
+    return new Animal();
+  }
+}
+```
+
+首先要知道，这个「静态」同样不是强类型类继承语言里有的「静态」的概念。所谓静态，就是说它跟实例是没关系的，而跟「类」本身有关系。比如，你可以这样调用：Animal.create()，但不能这样用：new Animal().create。什么场景下会用到这种模式呢？比如说：
+1、工厂模式或单例模式
+2、Object.create、Object.keys 等常用方法
+既然只有通过构造函数本身去调用，而不能通过实例来调用，期望它们被绑定到函数本身上似乎很自然。我们来看看上面这段代码将被如何编译：
+
+```js
+"use strict";
+
+var _createClass = (function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+})();
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var Animal = (function () {
+  function Animal() {
+    _classCallCheck(this, Animal);
+  }
+
+  _createClass(Animal, null, [
+    {
+      key: "create",
+      value: function create() {},
+    },
+  ]);
+
+  return Animal;
+})();
+```
+
+熟悉的函数，熟悉的配方。与本文的第二个例子相比，仅有一个地方的不同：create 方法是作为 \_createClass 方法的第三个参数被传入的，这正是我们上文提到的 staticProps 参数：
+
+```js
+var _createClass = (function() {
+  function defineProperties(target, props) { ... }
+
+  return function(Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps)
+    if (staticProps) defineProperties(Constructor, staticProps)
+    return Constructor
+  }
+})()
+
+_createClass(Animal, null, [
+  {
+    key: 'create',
+    value: function create() {},
+  },
+])
+
+```
+
+可以看见，create 方法是直接被创建到 Animal 上的：defineProperties(Animal, [{ key: 'create', value: function() {} }])，最终会将函数赋给 Animal.create。我们的猜测并没有错误。
+
+### 无继承——静态变量
+
+```js
+class Tiger {
+  static TYPE = "REAL";
+}
+```
+
+还有个小例子。如果是静态变量的话，同样因为不希望在实例对象上所使用，我们会看到编译出来的代码中它是直接被设置到函数上。代码已经很熟悉，不必再讲。
+
+```js
+"use strict";
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var Tiger = function Tiger() {
+  _classCallCheck(this, Tiger);
+};
+
+Tiger.TYPE = "REAL";
+```
