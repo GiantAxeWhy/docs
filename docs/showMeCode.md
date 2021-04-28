@@ -803,6 +803,644 @@ Array.prototype.reduce2 = function (callback, initialValue) {
 
 ### 实现函数原型
 
-```js
+使用一个指定的 this 值和一个或多个参数来调用一个函数。
 
+实现要点：
+
+this 可能传入 null；
+传入不固定个数的参数；
+函数可能有返回值；
+
+#### call
+
+```js
+Function.prototype.call2 = function (context) {
+  var context = context || window;
+  context.fn =this;
+  var args = []
+  for(let i = 0;len = arguments.length; i < len; i++){
+    args.push("arguments["+i+"]")
+  }
+  var result =eval('context.fn('+args+")")
+    delete context.fn
+    return result;
+};
+```
+
+#### apply
+
+apply 和 call 一样，唯一的区别就是 call 是传入不固定个数的参数，而 apply 是传入一个数组。
+
+实现要点：
+
+this 可能传入 null；
+传入一个数组；
+函数可能有返回值；
+
+```js
+Function.prototype.apply2 = function (context, arr) {
+  var context = context || window;
+  context.fn = this;
+
+  var result;
+  if (!arr) {
+    result = context.fn();
+  } else {
+    var args = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+      args.push("arr[" + i + "]");
+    }
+    result = eval("context.fn(" + args + ")");
+  }
+
+  delete context.fn;
+  return result;
+};
+```
+
+#### bind
+
+bind 方法会创建一个新的函数，在 bind() 被调用时，这个新函数的 this 被指定为 bind() 的第一个参数，而其余参数将作为新函数的参数，供调用时使用。
+实现要点：
+
+bind() 除了 this 外，还可传入多个参数；
+bing 创建的新函数可能传入多个参数；
+新函数可能被当做构造函数调用；
+函数可能有返回值；
+
+```js
+Function.prototype.bind2 = function (context) {
+  var self = this;
+  var args = Array.prototype.slice.call(arguments, 1);
+
+  var fNOP = function () {};
+
+  var fBound = function () {
+    var bindArgs = Array.prototype.slice.call(arguments);
+    return self.apply(
+      this instanceof fNOP ? this : context,
+      args.concat(bindArgs)
+    );
+  };
+
+  fNOP.prototype = this.prototype;
+  fBound.prototype = new fNOP();
+  return fBound;
+};
+```
+
+#### 使用 new 关键字
+
+new 运算符用来创建用户自定义的对象类型的实例或者具有构造函数的内置对象的实例。
+实现要点
+new 会产生一个新对象；
+新对象需要能够访问到构造函数的属性，所以需要重新指定它的原型；
+构造函数可能会显示返回；
+
+```js
+function objectFactory() {
+  var obj = new Object();
+  Constructor = [].shift.call(arguments);
+  obj.__proto__ = Constructor.prototype;
+  var ret = Constructor.apply(obj, arguments);
+
+  // ret || obj 这里这么写考虑了构造函数显示返回 null 的情况
+  return typeof ret === "object" ? ret || obj : obj;
+}
+
+//使用
+function person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+let p = objectFactory(person, "布兰", 12);
+console.log(p); // { name: '布兰', age: 12 }
+```
+
+#### instanceof 实现
+
+instanceof 就是判断构造函数的 prototype 属性是否出现在实例的原型链上。
+
+```js
+function instanceof(left, right) {
+  let proto = left._proto_;
+  while (true) {
+    if (proto === null) return false;
+    if (proto === right.prototype) {
+      return true;
+    }
+    proto = proto._proto_;
+  }
+}
+```
+
+上面的 left.proto 这种写法可以换成 Object.getPrototypeOf(left)。
+
+#### 实现 Object.create
+
+Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的*proto*。
+
+```js
+Object.create2 = function (proto, propertyObject = undefined) {
+  if (typeof proto !== "object" && typeof proto !== "function") {
+    throw new TypeError("Object prototype may only be an Object or null.");
+    if (propertyObject == null) {
+      new TypeError("Cannot convert undefined or null to object");
+    }
+    function F() {}
+    F.prototype = proto;
+    const obj = new F();
+    if (propertyObject != undefined) {
+      Object.defineProperties(obj, propertyObject);
+    }
+    if (proto === null) {
+      // 创建一个没有原型对象的对象，Object.create(null)
+      obj.__proto__ = null;
+    }
+    return obj;
+  }
+};
+```
+
+#### Object.assign
+
+```js
+Object.assign2 = function (target, ...source) {
+  if (target == null) {
+    throw new TypeError("Cannot convert undefined or null to object");
+  }
+  let ret = Object(target);
+  source.forEach(function (obj) {
+    if (obj != null) {
+      for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          ret[key] = obj[key];
+        }
+      }
+    }
+  });
+  return ret;
+};
+```
+
+#### 实现 JSON.stringify
+
+JSON.stringify([, replacer [, space]) 方法是将一个 JavaScript 值(对象或者数组)转换为一个 JSON 字符串。此处模拟实现，不考虑可选的第二个参数 replacer 和第三个参数 space，如果对这两个参数的作用还不了解，建议阅读 MDN 文档。
+
+基本数据类型：
+
+undefined 转换之后仍是 undefined(类型也是 undefined)
+boolean 值转换之后是字符串 "false"/"true"
+number 类型(除了 NaN 和 Infinity)转换之后是字符串类型的数值
+symbol 转换之后是 undefined
+null 转换之后是字符串 "null"
+string 转换之后仍是 string
+NaN 和 Infinity 转换之后是字符串 "null"
+
+函数类型：转换之后是 undefined
+如果是对象类型(非函数)
+
+如果是一个数组：如果属性值中出现了 undefined、任意的函数以及 symbol，转换成字符串 "null" ；
+如果是 RegExp 对象：返回 {} (类型是 string)；
+如果是 Date 对象，返回 Date 的 toJSON 字符串值；
+如果是普通对象；
+
+如果有 toJSON() 方法，那么序列化 toJSON() 的返回值。
+如果属性值中出现了 undefined、任意的函数以及 symbol 值，忽略。
+所有以 symbol 为属性键的属性都会被完全忽略掉。
+
+对包含循环引用的对象（对象之间相互引用，形成无限循环）执行此方法，会抛出错误。
+
+```js
+function jsonStringify(data) {
+  let dataType = typeof data;
+
+  if (dataType !== "object") {
+    let result = data;
+    //data 可能是 string/number/null/undefined/boolean
+    if (Number.isNaN(data) || data === Infinity) {
+      //NaN 和 Infinity 序列化返回 "null"
+      result = "null";
+    } else if (
+      dataType === "function" ||
+      dataType === "undefined" ||
+      dataType === "symbol"
+    ) {
+      //function 、undefined 、symbol 序列化返回 undefined
+      return undefined;
+    } else if (dataType === "string") {
+      result = '"' + data + '"';
+    }
+    //boolean 返回 String()
+    return String(result);
+  } else if (dataType === "object") {
+    if (data === null) {
+      return "null";
+    } else if (data.toJSON && typeof data.toJSON === "function") {
+      return jsonStringify(data.toJSON());
+    } else if (data instanceof Array) {
+      let result = [];
+      //如果是数组
+      //toJSON 方法可以存在于原型链中
+      data.forEach((item, index) => {
+        if (
+          typeof item === "undefined" ||
+          typeof item === "function" ||
+          typeof item === "symbol"
+        ) {
+          result[index] = "null";
+        } else {
+          result[index] = jsonStringify(item);
+        }
+      });
+      result = "[" + result + "]";
+      return result.replace(/'/g, '"');
+    } else {
+      //普通对象
+      /**
+       * 循环引用抛错(暂未检测，循环引用时，堆栈溢出)
+       * symbol key 忽略
+       * undefined、函数、symbol 为属性值，被忽略
+       */
+      let result = [];
+      Object.keys(data).forEach((item, index) => {
+        if (typeof item !== "symbol") {
+          //key 如果是symbol对象，忽略
+          if (
+            data[item] !== undefined &&
+            typeof data[item] !== "function" &&
+            typeof data[item] !== "symbol"
+          ) {
+            //键值如果是 undefined、函数、symbol 为属性值，忽略
+            result.push('"' + item + '"' + ":" + jsonStringify(data[item]));
+          }
+        }
+      });
+      return ("{" + result + "}").replace(/'/g, '"');
+    }
+  }
+}
+```
+
+#### 实现 JSON.parse
+
+介绍 2 种方法实现：
+
+eval 实现；
+new Function 实现；
+eval 实现
+第一种方式最简单，也最直观，就是直接调用 eval，代码如下：
+
+```js
+var json = '{"a":"1", "b":2}';
+var obj = eval("(" + json + ")"); // obj 就是 json 反序列化之后得到的对象
+```
+
+但是直接调用 eval 会存在安全问题，如果数据中可能不是 json 数据，而是可执行的 JavaScript 代码，那很可能会造成 XSS 攻击。因此，在调用 eval 之前，需要对数据进行校验。
+
+```js
+var rx_one = /^[\],:{}\s]*$/;
+var rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g;
+var rx_three = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
+var rx_four = /(?:^|:|,)(?:\s*\[)+/g;
+
+if (
+  rx_one.test(
+    json.replace(rx_two, "@").replace(rx_three, "]").replace(rx_four, "")
+  )
+) {
+  var obj = eval("(" + json + ")");
+}
+```
+
+new Function 实现
+Function 与 eval 有相同的字符串参数特性。
+
+```js
+var json = '{"name":"小姐姐", "age":20}';
+var obj = new Function("return " + json)();
+```
+
+#### 实现 promise
+
+实现 Promise 需要完全读懂 Promise A+ 规范，不过从总体的实现上看，有如下几个点需要考虑到：
+
+1、then 需要支持链式调用，所以得返回一个新的 Promise；
+2、处理异步问题，所以得先用 onResolvedCallbacks 和 onRejectedCallbacks 分别把成功和失败的回调存起来；
+3、为了让链式调用正常进行下去，需要判断 onFulfilled 和 onRejected 的类型；
+4、onFulfilled 和 onRejected 需要被异步调用，这里用 setTimeout 模拟异步；
+5、处理 Promise 的 resolve；
+
+```js
+const PENDING = 'pending';
+const FULFILLED = 'fulfilled';
+const REJECTED = 'rejected';
+
+class Promise {
+    constructor(executor) {
+        this.status = PENDING;
+        this.value = undefined;
+        this.reason = undefined;
+        this.onResolvedCallbacks = [];
+        this.onRejectedCallbacks = [];
+
+        let resolve = (value) = > {
+            if (this.status === PENDING) {
+                this.status = FULFILLED;
+                this.value = value;
+                this.onResolvedCallbacks.forEach((fn) = > fn());
+            }
+        };
+
+        let reject = (reason) = > {
+            if (this.status === PENDING) {
+                this.status = REJECTED;
+                this.reason = reason;
+                this.onRejectedCallbacks.forEach((fn) = > fn());
+            }
+        };
+
+        try {
+            executor(resolve, reject);
+        } catch (error) {
+            reject(error);
+        }
+    }
+
+    then(onFulfilled, onRejected) {
+        // 解决 onFufilled，onRejected 没有传值的问题
+        onFulfilled = typeof onFulfilled === "function" ? onFulfilled : (v) = > v;
+        // 因为错误的值要让后面访问到，所以这里也要抛出错误，不然会在之后 then 的 resolve 中捕获
+        onRejected = typeof onRejected === "function" ? onRejected : (err) = > {
+            throw err;
+        };
+        // 每次调用 then 都返回一个新的 promise
+        let promise2 = new Promise((resolve, reject) = > {
+            if (this.status === FULFILLED) {
+                //Promise/A+ 2.2.4 --- setTimeout
+                setTimeout(() = > {
+                    try {
+                        let x = onFulfilled(this.value);
+                        // x可能是一个proimise
+                        resolvePromise(promise2, x, resolve, reject);
+                    } catch (e) {
+                        reject(e);
+                    }
+                }, 0);
+            }
+
+            if (this.status === REJECTED) {
+                //Promise/A+ 2.2.3
+                setTimeout(() = > {
+                    try {
+                        let x = onRejected(this.reason);
+                        resolvePromise(promise2, x, resolve, reject);
+                    } catch (e) {
+                        reject(e);
+                    }
+                }, 0);
+            }
+
+            if (this.status === PENDING) {
+                this.onResolvedCallbacks.push(() = > {
+                    setTimeout(() = > {
+                        try {
+                            let x = onFulfilled(this.value);
+                            resolvePromise(promise2, x, resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    }, 0);
+                });
+
+                this.onRejectedCallbacks.push(() = > {
+                    setTimeout(() = > {
+                        try {
+                            let x = onRejected(this.reason);
+                            resolvePromise(promise2, x, resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    }, 0);
+                });
+            }
+        });
+
+        return promise2;
+    }
+}
+const resolvePromise = (promise2, x, resolve, reject) = > {
+    // 自己等待自己完成是错误的实现，用一个类型错误，结束掉 promise  Promise/A+ 2.3.1
+    if (promise2 === x) {
+        return reject(
+            new TypeError("Chaining cycle detected for promise #<Promise>"));
+    }
+    // Promise/A+ 2.3.3.3.3 只能调用一次
+    let called;
+    // 后续的条件要严格判断 保证代码能和别的库一起使用
+    if ((typeof x === "object" && x != null) || typeof x === "function") {
+        try {
+            // 为了判断 resolve 过的就不用再 reject 了（比如 reject 和 resolve 同时调用的时候）  Promise/A+ 2.3.3.1
+            let then = x.then;
+            if (typeof then === "function") {
+            // 不要写成 x.then，直接 then.call 就可以了 因为 x.then 会再次取值，Object.defineProperty  Promise/A+ 2.3.3.3
+                then.call(
+                    x, (y) = > {
+                        // 根据 promise 的状态决定是成功还是失败
+                        if (called) return;
+                        called = true;
+                        // 递归解析的过程（因为可能 promise 中还有 promise） Promise/A+ 2.3.3.3.1
+                        resolvePromise(promise2, y, resolve, reject);
+                    }, (r) = > {
+                        // 只要失败就失败 Promise/A+ 2.3.3.3.2
+                        if (called) return;
+                        called = true;
+                        reject(r);
+                    });
+            } else {
+                // 如果 x.then 是个普通值就直接返回 resolve 作为结果  Promise/A+ 2.3.3.4
+                resolve(x);
+            }
+        } catch (e) {
+            // Promise/A+ 2.3.3.2
+            if (called) return;
+            called = true;
+            reject(e);
+        }
+    } else {
+        // 如果 x 是个普通值就直接返回 resolve 作为结果  Promise/A+ 2.3.4
+        resolve(x);
+    }
+};
+
+```
+
+Promise 写完之后可以通过 promises-aplus-tests 这个包对我们写的代码进行测试，看是否符合 A+ 规范。不过测试前还得加一段代码：
+
+```js
+// promise.js
+// 这里是上面写的 Promise 全部代码
+Promise.defer = Promise.deferred = function () {
+  let dfd = {};
+  dfd.promise = new Promise((resolve, reject) => {
+    dfd.resolve = resolve;
+    dfd.reject = reject;
+  });
+  return dfd;
+};
+module.exports = Promise;
+```
+
+全局安装：
+
+npm i promises-aplus-tests -g
+复制代码
+终端下执行验证命令：
+
+promises-aplus-tests promise.js
+复制代码
+上面写的代码可以顺利通过全部 872 个测试用例。
+
+##### Promise.resolve
+
+Promsie.resolve(value) 可以将任何值转成值为 value 状态是 fulfilled 的 Promise，但如果传入的值本身是 Promise 则会原样返回它。
+
+```js
+Promise.resolve = function (value) {
+  // 如果是 Promsie，则直接输出它
+  if (value instanceof Promise) {
+    return value;
+  }
+  return new Promise((resolve) => resolve(value));
+};
+```
+
+##### Promise.reject
+
+和 Promise.resolve() 类似，Promise.reject() 会实例化一个 rejected 状态的 Promise。但与 Promise.resolve() 不同的是，如果给 Promise.reject() 传递一个 Promise 对象，则这个对象会成为新 Promise 的值。
+
+```js
+Promise.reject = function (reason) {
+  return new Promise((resolve, reject) => reject(reason));
+};
+```
+
+##### Promise.all
+
+Promise.all 的规则是这样的：
+
+传入的所有 Promsie 都是 fulfilled，则返回由他们的值组成的，状态为 fulfilled 的新 Promise；
+只要有一个 Promise 是 rejected，则返回 rejected 状态的新 Promsie，且它的值是第一个 rejected 的 Promise 的值；
+只要有一个 Promise 是 pending，则返回一个 pending 状态的新 Promise；
+
+```js
+Promise.all = function (promiseArr) {
+  let index = 0,
+    result = [];
+  return new Promise((resolve, reject) => {
+    promiseArr.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (val) => {
+          index++;
+          result[i] = val;
+          if (index === promiseArr.length) {
+            resolve(result);
+          }
+        },
+        (err) => {
+          reject(err);
+        }
+      );
+    });
+  });
+};
+```
+
+##### Promise.race
+
+Promise.race 会返回一个由所有可迭代实例中第一个 fulfilled 或 rejected 的实例包装后的新实例。
+
+```js
+Promise.race = function (promiseArr) {
+  return new Promise((resolve, reject) => {
+    promiseArr.forEach((p) => {
+      Promise.resolve(p).then(
+        (val) => {
+          resolve(val);
+        },
+        (err) => {
+          rejecte(err);
+        }
+      );
+    });
+  });
+};
+```
+
+##### Promise.allSettled
+
+Promise.allSettled 的规则是这样：
+
+所有 Promise 的状态都变化了，那么新返回一个状态是 fulfilled 的 Promise，且它的值是一个数组，数组的每项由所有 Promise 的值和状态组成的对象；
+如果有一个是 pending 的 Promise，则返回一个状态是 pending 的新实例；
+
+```js
+Promise.allSettled = function (promiseArr) {
+  let result = [];
+
+  return new Promise((resolve, reject) => {
+    promiseArr.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (val) => {
+          result.push({
+            status: "fulfilled",
+            value: val,
+          });
+          if (result.length === promiseArr.length) {
+            resolve(result);
+          }
+        },
+        (err) => {
+          result.push({
+            status: "rejected",
+            reason: err,
+          });
+          if (result.length === promiseArr.length) {
+            resolve(result);
+          }
+        }
+      );
+    });
+  });
+};
+```
+
+##### Promise.any
+
+Promise.any 的规则是这样：
+
+空数组或者所有 Promise 都是 rejected，则返回状态是 rejected 的新 Promsie，且值为 AggregateError 的错误；
+只要有一个是 fulfilled 状态的，则返回第一个是 fulfilled 的新实例；
+其他情况都会返回一个 pending 的新实例；
+
+```js
+Promise.any = function (promiseArr) {
+  let index = 0;
+  return new Promise((resolve, reject) => {
+    if (promiseArr.length === 0) return;
+    promiseArr.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (val) => {
+          resolve(val);
+        },
+        (err) => {
+          index++;
+          if (index === promiseArr.length) {
+            reject(new AggregateError("All promises were rejected"));
+          }
+        }
+      );
+    });
+  });
+};
 ```
