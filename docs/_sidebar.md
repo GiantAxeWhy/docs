@@ -8,6 +8,7 @@
   - [promise 手写](promise.md)
   - [JavaScript 原型继承之精髓](constructor.md)
   - [引用、浅拷贝及深拷贝 到 Map、Set](weakMap.md)
+  - [细碎的 JS](vsJs.md)
 
 - CSS
   - [布局](layout.md)
