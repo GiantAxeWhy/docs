@@ -10,6 +10,7 @@
   - [引用、浅拷贝及深拷贝 到 Map、Set](weakMap.md)
   - [JS 之间的对比汇总](vsJs.md)
   - [宏任务，微任务，eventloop](eventloop.md)
+  - [模块化](module.md)
   - [Javascript 汇总](javaScript.md)
 
 - CSS
