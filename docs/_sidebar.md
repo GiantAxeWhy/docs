@@ -11,6 +11,7 @@
   - [JS 之间的对比汇总](vsJs.md)
   - [宏任务，微任务，eventloop](eventloop.md)
   - [模块化](module.md)
+  - [V8 引擎垃圾回收与内存分配](V8.md)
   - [Javascript 汇总](javaScript.md)
 
 - CSS
