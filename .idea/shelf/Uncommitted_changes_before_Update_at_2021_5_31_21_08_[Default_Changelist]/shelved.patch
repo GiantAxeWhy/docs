@@ -1,0 +1,119 @@
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"03134f1f-fe07-4f04-a0be-053f97f90ec8\" name=\"Default Changelist\" comment=\"commit\">\r\n      <change beforePath=\"$PROJECT_DIR$/docs/_sidebar.md\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/docs/_sidebar.md\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/docs/javaScript.md\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/docs/javaScript.md\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"EXCLUDED_CONVERTED_TO_IGNORED\" value=\"true\" />\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"DefaultGradleProjectSettings\">\r\n    <option name=\"testRunner\" value=\"GRADLE\" />\r\n    <option name=\"delegatedBuild\" value=\"true\" />\r\n  </component>\r\n  <component name=\"FileEditorManager\">\r\n    <leaf>\r\n      <file pinned=\"false\" current-in-tab=\"false\">\r\n        <entry file=\"file://$PROJECT_DIR$/docs/eventloop.md\">\r\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n            <state relative-caret-position=\"-7127\">\r\n              <caret line=\"22\" column=\"14\" selection-start-line=\"22\" selection-start-column=\"14\" selection-end-line=\"22\" selection-end-column=\"14\" />\r\n            </state>\r\n          </provider>\r\n        </entry>\r\n      </file>\r\n      <file pinned=\"false\" current-in-tab=\"false\">\r\n        <entry file=\"file://$PROJECT_DIR$/docs/vue-regionCode.md\">\r\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n            <state relative-caret-position=\"-10577\" />\r\n          </provider>\r\n        </entry>\r\n      </file>\r\n      <file pinned=\"false\" current-in-tab=\"true\">\r\n        <entry file=\"file://$PROJECT_DIR$/docs/dom.html\">\r\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n            <state relative-caret-position=\"690\">\r\n              <caret line=\"30\" column=\"9\" selection-start-line=\"30\" selection-start-column=\"9\" selection-end-line=\"30\" selection-end-column=\"9\" />\r\n            </state>\r\n          </provider>\r\n        </entry>\r\n      </file>\r\n    </leaf>\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"HTML File\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"IdeDocumentHistory\">\r\n    <option name=\"CHANGED_PATHS\">\r\n      <list>\r\n        <option value=\"$PROJECT_DIR$/docs/dom.html\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"ProjectFrameBounds\" extendedState=\"7\">\r\n    <option name=\"x\" value=\"-8\" />\r\n    <option name=\"y\" value=\"-8\" />\r\n    <option name=\"width\" value=\"1936\" />\r\n    <option name=\"height\" value=\"1056\" />\r\n  </component>\r\n  <component name=\"ProjectView\">\r\n    <navigator proportions=\"\" version=\"1\">\r\n      <foldersAlwaysOnTop value=\"true\" />\r\n    </navigator>\r\n    <panes>\r\n      <pane id=\"ProjectPane\">\r\n        <subPane>\r\n          <expand>\r\n            <path>\r\n              <item name=\"docs\" type=\"b2602c69:ProjectViewProjectNode\" />\r\n              <item name=\"docs\" type=\"462c0819:PsiDirectoryNode\" />\r\n            </path>\r\n            <path>\r\n              <item name=\"docs\" type=\"b2602c69:ProjectViewProjectNode\" />\r\n              <item name=\"docs\" type=\"462c0819:PsiDirectoryNode\" />\r\n              <item name=\"docs\" type=\"462c0819:PsiDirectoryNode\" />\r\n            </path>\r\n          </expand>\r\n          <select />\r\n        </subPane>\r\n      </pane>\r\n      <pane id=\"PackagesPane\" />\r\n      <pane id=\"Scope\" />\r\n    </panes>\r\n  </component>\r\n  <component name=\"PropertiesComponent\">\r\n    <property name=\"ASKED_SHARE_PROJECT_CONFIGURATION_FILES\" value=\"true\" />\r\n    <property name=\"DefaultHtmlFileTemplate\" value=\"HTML File\" />\r\n    <property name=\"SHARE_PROJECT_CONFIGURATION_FILES\" value=\"true\" />\r\n    <property name=\"last_opened_file_path\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"RunDashboard\">\r\n    <option name=\"ruleStates\">\r\n      <list>\r\n        <RuleState>\r\n          <option name=\"name\" value=\"ConfigurationTypeDashboardGroupingRule\" />\r\n        </RuleState>\r\n        <RuleState>\r\n          <option name=\"name\" value=\"StatusDashboardGroupingRule\" />\r\n        </RuleState>\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"SvnConfiguration\">\r\n    <configuration />\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"03134f1f-fe07-4f04-a0be-053f97f90ec8\" name=\"Default Changelist\" comment=\"\" />\r\n      <created>1618315703333</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1618315703333</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"commit\">\r\n      <created>1618315736928</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1618315736928</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"commit\">\r\n      <created>1621409913090</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621409913090</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"3\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"ToolWindowManager\">\r\n    <frame x=\"-8\" y=\"-8\" width=\"1936\" height=\"1056\" extended-state=\"7\" />\r\n    <layout>\r\n      <window_info active=\"true\" content_ui=\"combo\" id=\"Project\" order=\"0\" visible=\"true\" weight=\"0.25266525\" />\r\n      <window_info id=\"Structure\" order=\"1\" side_tool=\"true\" weight=\"0.25\" />\r\n      <window_info id=\"Image Layers\" order=\"2\" />\r\n      <window_info id=\"Designer\" order=\"3\" />\r\n      <window_info id=\"UI Designer\" order=\"4\" />\r\n      <window_info id=\"Capture Tool\" order=\"5\" />\r\n      <window_info id=\"Favorites\" order=\"6\" side_tool=\"true\" />\r\n      <window_info anchor=\"bottom\" id=\"Message\" order=\"0\" />\r\n      <window_info anchor=\"bottom\" id=\"Find\" order=\"1\" />\r\n      <window_info anchor=\"bottom\" id=\"Run\" order=\"2\" />\r\n      <window_info anchor=\"bottom\" id=\"Debug\" order=\"3\" weight=\"0.4\" />\r\n      <window_info anchor=\"bottom\" id=\"Cvs\" order=\"4\" weight=\"0.25\" />\r\n      <window_info anchor=\"bottom\" id=\"Inspection\" order=\"5\" weight=\"0.4\" />\r\n      <window_info anchor=\"bottom\" id=\"TODO\" order=\"6\" />\r\n      <window_info anchor=\"bottom\" id=\"Terminal\" order=\"7\" />\r\n      <window_info anchor=\"bottom\" id=\"Event Log\" order=\"8\" side_tool=\"true\" />\r\n      <window_info anchor=\"bottom\" id=\"Version Control\" order=\"9\" />\r\n      <window_info anchor=\"right\" id=\"Commander\" internal_type=\"SLIDING\" order=\"0\" type=\"SLIDING\" weight=\"0.4\" />\r\n      <window_info anchor=\"right\" id=\"Ant Build\" order=\"1\" weight=\"0.25\" />\r\n      <window_info anchor=\"right\" content_ui=\"combo\" id=\"Hierarchy\" order=\"2\" weight=\"0.25\" />\r\n      <window_info anchor=\"right\" id=\"Palette\" order=\"3\" />\r\n      <window_info anchor=\"right\" id=\"Maven\" order=\"4\" />\r\n      <window_info anchor=\"right\" id=\"Theme Preview\" order=\"5\" />\r\n      <window_info anchor=\"right\" id=\"Capture Analysis\" order=\"6\" />\r\n      <window_info anchor=\"right\" id=\"Palette&#9;\" order=\"7\" />\r\n    </layout>\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"commit\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"commit\" />\r\n  </component>\r\n  <component name=\"editorHistoryManager\">\r\n    <entry file=\"file://$PROJECT_DIR$/docs/eventloop.md\">\r\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n        <state relative-caret-position=\"-7127\">\r\n          <caret line=\"22\" column=\"14\" selection-start-line=\"22\" selection-start-column=\"14\" selection-end-line=\"22\" selection-end-column=\"14\" />\r\n        </state>\r\n      </provider>\r\n    </entry>\r\n    <entry file=\"file://$PROJECT_DIR$/docs/vue-regionCode.md\">\r\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n        <state relative-caret-position=\"-10577\" />\r\n      </provider>\r\n    </entry>\r\n    <entry file=\"file://$PROJECT_DIR$/docs/dom.html\">\r\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\r\n        <state relative-caret-position=\"690\">\r\n          <caret line=\"30\" column=\"9\" selection-start-line=\"30\" selection-start-column=\"9\" selection-end-line=\"30\" selection-end-column=\"9\" />\r\n        </state>\r\n      </provider>\r\n    </entry>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	
++++ b/.idea/workspace.xml	
+@@ -1,11 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ChangeListManager">
+-    <list default="true" id="03134f1f-fe07-4f04-a0be-053f97f90ec8" name="Default Changelist" comment="commit">
+-      <change beforePath="$PROJECT_DIR$/docs/_sidebar.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/_sidebar.md" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/docs/javaScript.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/javaScript.md" afterDir="false" />
+-    </list>
+-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
++    <list default="true" id="03134f1f-fe07-4f04-a0be-053f97f90ec8" name="Default Changelist" comment="commit" />
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+@@ -14,35 +10,6 @@
+   <component name="DefaultGradleProjectSettings">
+     <option name="testRunner" value="GRADLE" />
+     <option name="delegatedBuild" value="true" />
+-  </component>
+-  <component name="FileEditorManager">
+-    <leaf>
+-      <file pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/docs/eventloop.md">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-7127">
+-              <caret line="22" column="14" selection-start-line="22" selection-start-column="14" selection-end-line="22" selection-end-column="14" />
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/docs/vue-regionCode.md">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-10577" />
+-          </provider>
+-        </entry>
+-      </file>
+-      <file pinned="false" current-in-tab="true">
+-        <entry file="file://$PROJECT_DIR$/docs/dom.html">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="690">
+-              <caret line="30" column="9" selection-start-line="30" selection-start-column="9" selection-end-line="30" selection-end-column="9" />
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-    </leaf>
+   </component>
+   <component name="FileTemplateManagerImpl">
+     <option name="RECENT_TEMPLATES">
+@@ -67,6 +34,7 @@
+     <option name="width" value="1936" />
+     <option name="height" value="1056" />
+   </component>
++  <component name="ProjectId" id="1tFLUWGTTLgMG93XjAsG9pqOCd7" />
+   <component name="ProjectView">
+     <navigator proportions="" version="1">
+       <foldersAlwaysOnTop value="true" />
+@@ -91,25 +59,21 @@
+       <pane id="PackagesPane" />
+       <pane id="Scope" />
+     </panes>
++  </component>
++  <component name="ProjectViewState">
++    <option name="hideEmptyMiddlePackages" value="true" />
++    <option name="showLibraryContents" value="true" />
+   </component>
+   <component name="PropertiesComponent">
+     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+     <property name="DefaultHtmlFileTemplate" value="HTML File" />
+     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
++    <property name="WebServerToolWindowFactoryState" value="false" />
++    <property name="aspect.path.notification.shown" value="true" />
+     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+-  </component>
+-  <component name="RunDashboard">
+-    <option name="ruleStates">
+-      <list>
+-        <RuleState>
+-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+-        </RuleState>
+-        <RuleState>
+-          <option name="name" value="StatusDashboardGroupingRule" />
+-        </RuleState>
+-      </list>
+-    </option>
++    <property name="nodejs_package_manager_path" value="npm" />
+   </component>
++  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+   <component name="SvnConfiguration">
+     <configuration />
+   </component>
+@@ -120,6 +84,7 @@
+       <option name="number" value="Default" />
+       <option name="presentableId" value="Default" />
+       <updated>1618315703333</updated>
++      <workItem from="1622359908992" duration="1427000" />
+     </task>
+     <task id="LOCAL-00001" summary="commit">
+       <created>1618315736928</created>
+@@ -167,6 +132,9 @@
+       <window_info anchor="right" id="Capture Analysis" order="6" />
+       <window_info anchor="right" id="Palette&#9;" order="7" />
+     </layout>
++  </component>
++  <component name="TypeScriptGeneratedFilesManager">
++    <option name="version" value="3" />
+   </component>
+   <component name="VcsManagerConfiguration">
+     <MESSAGE value="commit" />
