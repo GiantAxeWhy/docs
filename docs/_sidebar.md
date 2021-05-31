@@ -12,6 +12,8 @@
   - [宏任务，微任务，eventloop](eventloop.md)
   - [模块化](module.md)
   - [V8 引擎垃圾回收与内存分配](V8.md)
+  - [proxy](proxy.md)
+  - [Iterator 和 for...of 循环](Iterator.md)
   - [Javascript 汇总](javaScript.md)
 
 - CSS

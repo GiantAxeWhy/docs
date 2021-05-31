@@ -71,6 +71,20 @@ freeze 方法其效果在有一定程度与浅拷贝相同，但效果上还要�
 
 #### map
 
+JavaScript 的对象（Object），本质上是键值对的集合（Hash 结构），但是传统上只能用字符串当作键。这给它的使用带来了很大的限制。
+
+```js
+const data = {};
+const element = document.getElementById("myDiv");
+
+data[element] = "metadata";
+data["[object HTMLDivElement]"]; // "metadata"
+```
+
+上面代码原意是将一个 DOM 节点作为对象 data 的键，但是由于对象只接受字符串作为键名，所以 element 被自动转为字符串[object HTMLDivElement]。
+
+为了解决这个问题，ES6 提供了 Map 数据结构。它类似于对象，也是键值对的集合，但是“键”的范围不限于字符串，各种类型的值（包括对象）都可以当作键。也就是说，Object 结构提供了“字符串—值”的对应，Map 结构提供了“值—值”的对应，是一种更完善的 Hash 结构实现。如果你需要“键值对”的数据结构，Map 比 Object 更合适。
+
 对于 Hash 结构 即 键值对的集合，Object 对象只能用字符串作为 key 值，在使用上有很大的限制，ES6 提供的新的数据结构 Map 相对于 Object 对象，其“键”的范围不限于字符串类型，实现了“值-值”的对应，使用上可以有更广泛的运用。
 
 但 Map 在赋值时，只能接受如数组一般有 lterator 接口且每个成员都是双元素的数组的数据结构作为参数，该数组成员是一个个表示键值对的数组，之外就只能通过 Map 自身 set 方法添加成员。
@@ -141,6 +155,82 @@ console.log(upStairs(n)); // 573147844013817200000
 
 此处我们对强弱引用进行简单介绍：弱引用在回收机制上比强引用好，在“适当”的情况将会被回收，减少内存资源浪费，但由于不是强引用，WeakMap 不能进行遍历与 size 方法取得内部值数量。
 
+WeakMap 与 Map 的区别有两点。
+
+首先，WeakMap 只接受对象作为键名（null 除外），不接受其他类型的值作为键名。
+
+```js
+const map = new WeakMap();
+map.set(1, 2);
+// TypeError: 1 is not an object!
+map.set(Symbol(), 2);
+// TypeError: Invalid value used as weak map key
+map.set(null, 2);
+// TypeError: Invalid value used as weak map key
+```
+
+上面代码中，如果将数值 1 和 Symbol 值作为 WeakMap 的键名，都会报错。
+
+其次，WeakMap 的键名所指向的对象，不计入垃圾回收机制。
+
+WeakMap 的设计目的在于，有时我们想在某个对象上面存放一些数据，但是这会形成对于这个对象的引用。请看下面的例子。
+
+```js
+const e1 = document.getElementById("foo");
+const e2 = document.getElementById("bar");
+const arr = [
+  [e1, "foo 元素"],
+  [e2, "bar 元素"],
+];
+```
+
+上面代码中，e1 和 e2 是两个对象，我们通过 arr 数组对这两个对象添加一些文字说明。这就形成了 arr 对 e1 和 e2 的引用。
+
+一旦不再需要这两个对象，我们就必须手动删除这个引用，否则垃圾回收机制就不会释放 e1 和 e2 占用的内存。
+
+```js
+// 不需要 e1 和 e2 的时候
+// 必须手动删除引用
+arr[0] = null;
+arr[1] = null;
+```
+
+上面这样的写法显然很不方便。一旦忘了写，就会造成内存泄露。
+
+WeakMap 就是为了解决这个问题而诞生的，它的键名所引用的对象都是弱引用，即垃圾回收机制不将该引用考虑在内。因此，只要所引用的对象的其他引用都被清除，垃圾回收机制就会释放该对象所占用的内存。也就是说，一旦不再需要，WeakMap 里面的键名对象和所对应的键值对会自动消失，不用手动删除引用。
+
+基本上，如果你要往对象上添加数据，又不想干扰垃圾回收机制，就可以使用 WeakMap。一个典型应用场景是，在网页的 DOM 元素上添加数据，就可以使用 WeakMap 结构。当该 DOM 元素被清除，其所对应的 WeakMap 记录就会自动被移除。
+
+```js
+const wm = new WeakMap();
+
+const element = document.getElementById("example");
+
+wm.set(element, "some information");
+wm.get(element); // "some information"
+```
+
+上面代码中，先新建一个 WeakMap 实例。然后，将一个 DOM 节点作为键名存入该实例，并将一些附加信息作为键值，一起存放在 WeakMap 里面。这时，WeakMap 里面对 element 的引用就是弱引用，不会被计入垃圾回收机制。
+
+也就是说，上面的 DOM 节点对象除了 WeakMap 的弱引用外，其他位置对该对象的引用一旦消除，该对象占用的内存就会被垃圾回收机制释放。WeakMap 保存的这个键值对，也会自动消失。
+
+总之，WeakMap 的专用场合就是，它的键所对应的对象，可能会在将来消失。WeakMap 结构有助于防止内存泄漏。
+
+注意，WeakMap 弱引用的只是键名，而不是键值。键值依然是正常引用。
+
+```js
+const wm = new WeakMap();
+let key = {};
+let obj = { foo: 1 };
+
+wm.set(key, obj);
+obj = null;
+wm.get(key);
+// Object {foo: 1}
+```
+
+上面代码中，键值 obj 是正常引用。所以，即使在 WeakMap 外部消除了 obj 的引用，WeakMap 内部的引用依然存在。
+
 #### 应用场景
 
 WeakMap 因为键必须为对象，且在回收机制上的优越性，其可以用在以下两个场景：
@@ -206,6 +296,16 @@ const arrFromSet1 = Array.from(set);
 const arrFromSet2 = [...set];
 console.log(arrFromSet1); // [ 1, 2, 3 ]
 console.log(arrFromSet2); // [ 1, 2, 3 ]
+```
+
+去除重复字符串以及数组
+
+```js
+// 去除数组的重复成员
+[...new Set(array)];
+
+[...new Set("ababbc")].join("");
+// "abc"
 ```
 
 #### Set 自身方法
@@ -293,6 +393,12 @@ WeakSet 与 Set 之间不同之处，依然是：
 1. WeakSet 内的值只能为对象；
 
 2. WeakSet 依旧是弱引用。
+
+WeakSet 中的对象都是弱引用，即垃圾回收机制不考虑 WeakSet 对该对象的引用，也就是说，如果其他对象都不再引用该对象，那么垃圾回收机制会自动回收该对象所占用的内存，不考虑该对象还存在于 WeakSet 之中。
+
+这是因为垃圾回收机制根据对象的可达性（reachability）来判断回收，如果对象还能被访问到，垃圾回收机制就不会释放这块内存。结束使用该值之后，有时会忘记取消引用，导致内存无法释放，进而可能会引发内存泄漏。WeakSet 里面的引用，都不计入垃圾回收机制，所以就不存在这个问题。因此，WeakSet 适合临时存放一组对象，以及存放跟对象绑定的信息。只要这些对象在外部消失，它在 WeakSet 里面的引用就会自动消失。
+
+由于上面这个特点，WeakSet 的成员是不适合引用的，因为它会随时消失。另外，由于 WeakSet 内部有多少个成员，取决于垃圾回收机制有没有运行，运行前后很可能成员个数是不一样的，而垃圾回收机制何时运行是不可预测的，因此 ES6 规定 WeakSet 不可遍历。
 
 #### WeakSet 自身方法
 
