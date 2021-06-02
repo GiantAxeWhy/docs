@@ -1290,3 +1290,162 @@ var fix = f => (x => f(v => x(x)(v)))
 ```
 
 上面两种写法，几乎是一一对应的。由于 λ 演算对于计算机科学非常重要，这使得我们可以用 ES6 作为替代工具，探索计算机科学。
+
+# 30. 什么是类？
+
+类(class)是在 JS 中编写构造函数的新方法。它是使用构造函数的语法糖，在底层中使用仍然是原型和基于原型的继承。
+
+```js
+//ES5 Version
+function Person(firstName, lastName, age, address) {
+  this.firstName = firstName;
+  this.lastName = lastName;
+  this.age = age;
+  this.address = address;
+}
+
+Person.self = function () {
+  return this;
+};
+
+Person.prototype.toString = function () {
+  return "[object Person]";
+};
+
+Person.prototype.getFullName = function () {
+  return this.firstName + " " + this.lastName;
+};
+
+//ES6 Version
+class Person {
+  constructor(firstName, lastName, age, address) {
+    this.lastName = lastName;
+    this.firstName = firstName;
+    this.age = age;
+    this.address = address;
+  }
+
+  static self() {
+    return this;
+  }
+
+  toString() {
+    return "[object Person]";
+  }
+
+  getFullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+}
+```
+
+重写方法并从另一个类继承。
+
+```js
+//ES5 Version
+Employee.prototype = Object.create(Person.prototype);
+
+function Employee(firstName, lastName, age, address, jobTitle, yearStarted) {
+  Person.call(this, firstName, lastName, age, address);
+  this.jobTitle = jobTitle;
+  this.yearStarted = yearStarted;
+}
+
+Employee.prototype.describe = function () {
+  return `I am ${this.getFullName()} and I have a position of ${
+    this.jobTitle
+  } and I started at ${this.yearStarted}`;
+};
+
+Employee.prototype.toString = function () {
+  return "[object Employee]";
+};
+
+//ES6 Version
+class Employee extends Person {
+  //Inherits from "Person" class
+  constructor(firstName, lastName, age, address, jobTitle, yearStarted) {
+    super(firstName, lastName, age, address);
+    this.jobTitle = jobTitle;
+    this.yearStarted = yearStarted;
+  }
+
+  describe() {
+    return `I am ${this.getFullName()} and I have a position of ${
+      this.jobTitle
+    } and I started at ${this.yearStarted}`;
+  }
+
+  toString() {
+    // Overriding the "toString" method of "Person"
+    return "[object Employee]";
+  }
+}
+```
+
+所以我们要怎么知道它在内部使用原型？
+
+```js
+class Something {}
+
+function AnotherSomething() {}
+const as = new AnotherSomething();
+const s = new Something();
+
+console.log(typeof Something); // "function"
+console.log(typeof AnotherSomething); // "function"
+console.log(as.toString()); // "[object Object]"
+console.log(as.toString()); // "[object Object]"
+console.log(as.toString === Object.prototype.toString); // true
+console.log(s.toString === Object.prototype.toString); // true
+```
+
+# 31. 什么是 Set 对象，它是如何工作的？
+
+Set 对象允许你存储任何类型的唯一值，无论是原始值或者是对象引用。
+我们可以使用 Set 构造函数创建 Set 实例。
+
+```js
+const set1 = new Set();
+const set2 = new Set(["a", "b", "c", "d", "d", "e"]);
+```
+
+我们可以使用 add 方法向 Set 实例中添加一个新值，因为 add 方法返回 Set 对象，所以我们可以以链式的方式再次使用 add。如果一个值已经存在于 Set 对象中，那么它将不再被添加。
+
+```js
+set2.add("f");
+set2.add("g").add("h").add("i").add("j").add("k").add("k");
+// 后一个“k”不会被添加到set对象中，因为它已经存在了
+```
+
+我们可以使用 has 方法检查 Set 实例中是否存在特定的值。
+
+```js
+set2.has("a"); // true
+set2.has("z"); // true
+```
+
+我们可以使用 size 属性获得 Set 实例的长度。
+
+```js
+set2.size; // returns 10
+```
+
+可以使用 clear 方法删除 Set 中的数据。
+
+```js
+set2.clear();
+```
+
+我们可以使用 Set 对象来删除数组中重复的元素。
+
+```js
+const numbers = [1, 2, 3, 4, 5, 6, 6, 7, 8, 8, 5];
+const uniqueNums = [...new Set(numbers)]; // [1,2,3,4,5,6,7,8]
+```
+
+另外还有 WeakSet， 与 Set 类似，也是不重复的值的集合。但是 WeakSet 的成员只能是对象，而不能是其他类型的值。WeakSet 中的对象都是弱引用，即垃圾回收机制不考虑 WeakSet 对该对象的引用。
+
+Map 数据结构。它类似于对象，也是键值对的集合，但是“键”的范围不限于字符串，各种类型的值（包括对象）都可以当作键。
+
+WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。但是 WeakMap 只接受对象作为键名（ null 除外），不接受其他类型的值作为键名。而且 WeakMap 的键名所指向的对象，不计入垃圾回收机制。
