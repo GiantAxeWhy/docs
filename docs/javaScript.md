@@ -1449,3 +1449,885 @@ const uniqueNums = [...new Set(numbers)]; // [1,2,3,4,5,6,7,8]
 Map 数据结构。它类似于对象，也是键值对的集合，但是“键”的范围不限于字符串，各种类型的值（包括对象）都可以当作键。
 
 WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。但是 WeakMap 只接受对象作为键名（ null 除外），不接受其他类型的值作为键名。而且 WeakMap 的键名所指向的对象，不计入垃圾回收机制。
+
+# 32.实现 array.prototype.map && filter && reduce && foreach && find
+
+map
+map 方法接收一个回调函数，函数内接收三个参数，当前项、索引、原数组，返回一个新的数组，并且数组长度不变。 知道了这些特征之后，我们用 reduce 重塑 map 。
+
+```js
+function map(arr, mapcallback) {
+  if (!Array.isArray(arr) || !arr.length || typeof mapcallback !== "function") {
+    return [];
+  } else {
+    let result = [];
+    for (let i = 0; i < arr.length; i++) {
+      result.push(mapcallback(arr[i], i, arr));
+    }
+    return result;
+  }
+}
+//reduce实现
+const testArr = [1, 2, 3, 4];
+Array.prototype.reduceMap = function (callback) {
+  return this.reduce((acc, cur, index, array) => {
+    const item = callback(cur, index, array);
+    acc.push(item);
+    return acc;
+  }, []);
+};
+testArr.reduceMap((item, index) => {
+  return item + index;
+});
+// [1, 3, 5, 7]
+```
+
+在 Array  的原型链上添加 reduceMap  方法，接收一个回调函数 callback 作为参数（就是 map  传入的回调函数），内部通过 this  拿到当前需要操作的数组，这里 reduce  方法的第二个参数初始值很关键，需要设置成一个 [] ，这样便于后面把操作完的单项塞入 acc 。我们需要给 callback  方法传入三个值，当前项、索引、原数组，也就是原生 map  回调函数能拿到的值。返回 item  塞进 acc，并且返回 acc ，作为下一个循环的 acc（贪吃蛇原理）。最终 this.reduce  返回了新的数组，并且长度不变。
+
+foreach
+
+forEach 接收一个回调函数作为参数，函数内接收四个参数当前项、索引、原函数、当执行回调函数 callback 时，用作 this 的值，并且不返回值。
+
+```js
+const testArr = [1, 2, 3, 4];
+Array.prototype.reduceForEach = function (callback) {
+  this.reduce((acc, cur, index, array) => {
+    callback(cur, index, array);
+  }, []);
+};
+
+testArr.reduceForEach((item, index, array) => {
+  console.log(item, index);
+});
+// 1234
+// 0123
+```
+
+find
+find 方法中 callback 同样也是返回 Boolean 类型，返回你要找的第一个符合要求的项。
+
+```js
+const testArr = [1, 2, 3, 4];
+const testObj = [{ a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }];
+Array.prototype.reduceFind = function (callback) {
+  return this.reduce((acc, cur, index, array) => {
+    if (callback(cur, index, array)) {
+      if (acc instanceof Array && acc.length == 0) {
+        acc = cur;
+      }
+    }
+    // 循环到最后若 acc 还是数组，且长度为 0，代表没有找到想要的项，则 acc = undefined
+    if (index == array.length - 1 && acc instanceof Array && acc.length == 0) {
+      acc = undefined;
+    }
+    return acc;
+  }, []);
+};
+testArr.reduceFind((item) => item % 2 == 0); // 2
+testObj.reduceFind((item) => item.a % 2 == 0); // {a: 2}
+testObj.reduceFind((item) => item.a % 9 == 0); // undefined
+```
+
+你不知道操作的数组是对象数组还是普通数组，所以这里只能直接覆盖 acc 的值，找到第一个符合判断标准的值就不再进行赋值操作。
+
+filter
+filter 同样接收一个回调函数，回调函数返回 true 则返回当前项，反之则不返回。回调函数接收的参数同 forEach 。
+
+```js
+function filter(arr, filterCallback) {
+  // 首先，检查传递的参数是否正确。
+  if (
+    !Array.isArray(arr) ||
+    !arr.length ||
+    typeof filterCallback !== "function"
+  ) {
+    return [];
+  } else {
+    let result = [];
+    // 每次调用此函数时，我们都会创建一个 result 数组
+    // 因为我们不想改变原始数组。
+    for (let i = 0, len = arr.length; i < len; i++) {
+      // 检查 filterCallback 的返回值是否是真值
+      if (filterCallback(arr[i], i, arr)) {
+        // 如果条件为真，则将数组元素 push 到 result 中
+        result.push(arr[i]);
+      }
+    }
+    return result; // return the result array
+  }
+}
+
+//reduce
+const testArr = [1, 2, 3, 4];
+Array.prototype.reduceFilter = function (callback) {
+  return this.reduce((acc, cur, index, array) => {
+    if (callback(cur, index, array)) {
+      acc.push(cur);
+    }
+    return acc;
+  }, []);
+};
+testArr.reduceFilter((item) => item % 2 == 0); // 过滤出偶数项。
+// [2, 4]
+```
+
+# 33 .深浅拷贝
+
+JavaScript 的深浅拷贝一直是个难点，如果现在面试官让我写一个深拷贝，我可能也只是能写出个基础版的。所以在写这条之前我拜读了收藏夹里各路大佬写的博文。具体可以看下面我贴的链接，这里只做简单的总结。
+
+浅拷贝： 创建一个新对象，这个对象有着原始对象属性值的一份精确拷贝。如果属性是基本类型，拷贝的就是基本类型的值，如果属性是引用类型，拷贝的就是内存地址 ，所以如果其中一个对象改变了这个地址，就会影响到另一个对象。
+深拷贝： 将一个对象从内存中完整的拷贝一份出来,从堆内存中开辟一个新的区域存放新对象,且修改新对象不会影响原对象。
+
+浅拷贝的实现方式：
+
+Object.assign() 方法： 用于将所有可枚举属性的值从一个或多个源对象复制到目标对象。它将返回目标对象。
+**Array.prototype.slice()：**slice() 方法返回一个新的数组对象，这一对象是一个由 begin 和 end（不包括 end）决定的原数组的浅拷贝。原始数组不会被改变。
+拓展运算符...：
+
+深拷贝的实现方式：
+
+乞丐版： JSON.parse(JSON.stringify(object))，缺点诸多（会忽略 undefined、symbol、函数；不能解决循环引用；不能处理正则、new Date()）
+
+基础版（面试够用）： 浅拷贝+递归 （只考虑了普通的 object 和 array 两种数据类型）
+
+```js
+function cloneDeep(target,map = new WeakMap()) {
+  if(typeOf taret ==='object'){
+     let cloneTarget = Array.isArray(target) ? [] : {};
+
+     if(map.get(target)) {
+        return target;
+    }
+     map.set(target, cloneTarget);
+     for(const key in target){
+        cloneTarget[key] = cloneDeep(target[key], map);
+     }
+     return cloneTarget
+  }else{
+       return target
+  }
+
+}
+
+
+```
+
+终极版：
+
+```js
+const mapTag = "[object Map]";
+const setTag = "[object Set]";
+const arrayTag = "[object Array]";
+const objectTag = "[object Object]";
+const argsTag = "[object Arguments]";
+
+const boolTag = "[object Boolean]";
+const dateTag = "[object Date]";
+const numberTag = "[object Number]";
+const stringTag = "[object String]";
+const symbolTag = "[object Symbol]";
+const errorTag = "[object Error]";
+const regexpTag = "[object RegExp]";
+const funcTag = "[object Function]";
+
+const deepTag = [mapTag, setTag, arrayTag, objectTag, argsTag];
+
+function forEach(array, iteratee) {
+  let index = -1;
+  const length = array.length;
+  while (++index < length) {
+    iteratee(array[index], index);
+  }
+  return array;
+}
+
+function isObject(target) {
+  const type = typeof target;
+  return target !== null && (type === "object" || type === "function");
+}
+
+function getType(target) {
+  return Object.prototype.toString.call(target);
+}
+
+function getInit(target) {
+  const Ctor = target.constructor;
+  return new Ctor();
+}
+
+function cloneSymbol(targe) {
+  return Object(Symbol.prototype.valueOf.call(targe));
+}
+
+function cloneReg(targe) {
+  const reFlags = /\w*$/;
+  const result = new targe.constructor(targe.source, reFlags.exec(targe));
+  result.lastIndex = targe.lastIndex;
+  return result;
+}
+
+function cloneFunction(func) {
+  const bodyReg = /(?<={)(.|\n)+(?=})/m;
+  const paramReg = /(?<=\().+(?=\)\s+{)/;
+  const funcString = func.toString();
+  if (func.prototype) {
+    const param = paramReg.exec(funcString);
+    const body = bodyReg.exec(funcString);
+    if (body) {
+      if (param) {
+        const paramArr = param[0].split(",");
+        return new Function(...paramArr, body[0]);
+      } else {
+        return new Function(body[0]);
+      }
+    } else {
+      return null;
+    }
+  } else {
+    return eval(funcString);
+  }
+}
+
+function cloneOtherType(targe, type) {
+  const Ctor = targe.constructor;
+  switch (type) {
+    case boolTag:
+    case numberTag:
+    case stringTag:
+    case errorTag:
+    case dateTag:
+      return new Ctor(targe);
+    case regexpTag:
+      return cloneReg(targe);
+    case symbolTag:
+      return cloneSymbol(targe);
+    case funcTag:
+      return cloneFunction(targe);
+    default:
+      return null;
+  }
+}
+
+function clone(target, map = new WeakMap()) {
+  // 克隆原始类型
+  if (!isObject(target)) {
+    return target;
+  }
+
+  // 初始化
+  const type = getType(target);
+  let cloneTarget;
+  if (deepTag.includes(type)) {
+    cloneTarget = getInit(target, type);
+  } else {
+    return cloneOtherType(target, type);
+  }
+
+  // 防止循环引用
+  if (map.get(target)) {
+    return map.get(target);
+  }
+  map.set(target, cloneTarget);
+
+  // 克隆set
+  if (type === setTag) {
+    target.forEach((value) => {
+      cloneTarget.add(clone(value, map));
+    });
+    return cloneTarget;
+  }
+
+  // 克隆map
+  if (type === mapTag) {
+    target.forEach((value, key) => {
+      cloneTarget.set(key, clone(value, map));
+    });
+    return cloneTarget;
+  }
+
+  // 克隆对象和数组
+  const keys = type === arrayTag ? undefined : Object.keys(target);
+  forEach(keys || target, (value, key) => {
+    if (keys) {
+      key = value;
+    }
+    cloneTarget[key] = clone(target[key], map);
+  });
+
+  return cloneTarget;
+}
+
+module.exports = {
+  clone,
+};
+```
+
+# 34. 手写 call、apply 及 bind 函数
+
+call 函数的实现步骤：
+
+      1.判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+      2.判断传入上下文对象是否存在，如果不存在，则设置为 window 。
+      3.处理传入的参数，截取第一个参数后的所有参数。
+      4.将函数作为上下文对象的一个属性。
+      5.使用上下文对象来调用这个方法，并保存返回结果。
+      6.删除刚才新增的属性。
+      7.返回结果。
+
+```js
+// call函数实现
+Function.prototype.myCall = function (context) {
+  // 判断调用对象
+  if (typeof this !== "function") {
+    console.error("type error");
+  }
+
+  // 获取参数
+  let args = [...arguments].slice(1),
+    result = null;
+
+  // 判断 context 是否传入，如果未传入则设置为 window
+  context = context || window;
+
+  // 将调用函数设为对象的方法
+  context.fn = this;
+
+  // 调用函数
+  result = context.fn(...args);
+
+  // 将属性删除
+  delete context.fn;
+
+  return result;
+};
+```
+
+apply 函数的实现步骤：
+
+判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+
+判断传入上下文对象是否存在，如果不存在，则设置为 window 。
+
+将函数作为上下文对象的一个属性。
+
+判断参数值是否传入
+
+使用上下文对象来调用这个方法，并保存返回结果。
+
+删除刚才新增的属性
+
+返回结果
+
+```js
+// apply 函数实现
+
+Function.prototype.myApply = function (context) {
+  // 判断调用对象是否为函数
+  if (typeof this !== "function") {
+    throw new TypeError("Error");
+  }
+
+  let result = null;
+
+  // 判断 context 是否存在，如果未传入则为 window
+  context = context || window;
+
+  // 将函数设为对象的方法
+  context.fn = this;
+
+  // 调用方法
+  if (arguments[1]) {
+    result = context.fn(...arguments[1]);
+  } else {
+    result = context.fn();
+  }
+
+  // 将属性删除
+  delete context.fn;
+
+  return result;
+};
+```
+
+bind 函数的实现步骤：
+
+      1.判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+      2.保存当前函数的引用，获取其余传入参数值。
+      3.创建一个函数返回
+      4.函数内部使用 apply 来绑定函数调用，需要判断函数作为构造函数的情况，这个时候需要传入当前函数的 this 给 apply 调用，其余情况都传入指定的上下文对象。
+
+```js
+// bind 函数实现
+Function.prototype.myBind = function (context) {
+  // 判断调用对象是否为函数
+  if (typeof this !== "function") {
+    throw new TypeError("Error");
+  }
+
+  // 获取参数
+  var args = [...arguments].slice(1),
+    fn = this;
+
+  return function Fn() {
+    // 根据调用方式，传入不同绑定值
+    return fn.apply(
+      this instanceof Fn ? this : context,
+      args.concat(...arguments)
+    );
+  };
+};
+```
+
+# 35.函数柯里化
+
+```js
+// 函数柯里化指的是一种将使用多个参数的一个函数转换成一系列使用一个参数的函数的技术。
+
+function curry(fn, args) {
+  // 获取函数需要的参数长度
+  let length = fn.length;
+
+  args = args || [];
+
+  return function () {
+    let subArgs = args.slice(0);
+
+    // 拼接得到现有的所有参数
+    for (let i = 0; i < arguments.length; i++) {
+      subArgs.push(arguments[i]);
+    }
+
+    // 判断参数的长度是否已经满足函数所需参数的长度
+    if (subArgs.length >= length) {
+      // 如果满足，执行函数
+      return fn.apply(this, subArgs);
+    } else {
+      // 如果不满足，递归返回科里化的函数，等待参数的传入
+      return curry.call(this, fn, subArgs);
+    }
+  };
+}
+
+// es6 实现
+function curry(fn, ...args) {
+  return fn.length <= args.length ? fn(...args) : curry.bind(null, fn, ...args);
+}
+```
+
+# 36.js 模拟 new 操作符的实现
+
+new 运算符创建一个用户定义的对象类型的实例或具有构造函数的内置对象的实例。new 关键字会进行如下的操作：
+
+      创建一个空的简单JavaScript对象（即{}）；
+      链接该对象（即设置该对象的构造函数）到另一个对象 ；
+      将步骤1新创建的对象作为this的上下文 ；
+      如果该函数没有返回对象，则返回this。
+
+接下来我们看实现：
+
+```js
+function Dog(name, color, age) {
+  this.name = name;
+  this.color = color;
+  this.age = age;
+}
+
+Dog.prototype = {
+  getName: function () {
+    return this.name;
+  },
+};
+
+var dog = new Dog("大黄", "yellow", 3);
+```
+
+按照上述的 1,2,3,4 步来解析 new 背后的操作。
+第一步：创建一个简单空对象
+
+```js
+var obj = {};
+```
+
+第二步：链接该对象到另一个对象（原型链）
+
+```js
+// 设置原型链
+obj.__proto__ = Dog.prototype;
+```
+
+第三步：将步骤 1 新创建的对象作为 this 的上下文
+
+```js
+// this指向obj对象
+Dog.apply(obj, ["大黄", "yellow", 3]);
+```
+
+第四步：如果该函数没有返回对象，则返回 this
+
+```js
+// 因为 Dog() 没有返回值，所以返回obj
+var dog = obj;
+dog.getName(); // '大黄'
+```
+
+需要注意的是如果 Dog() 有 return 则返回 return 的值
+
+```js
+var rtnObj = {};
+function Dog(name, color, age) {
+  // ...
+  //返回一个对象
+  return rtnObj;
+}
+
+var dog = new Dog("大黄", "yellow", 3);
+console.log(dog === rtnObj); // true
+```
+
+接下来我们将以上步骤封装成一个对象实例化方法，即模拟 new 的操作：
+
+```js
+function objectFactory() {
+  var obj = {};
+  //取得该方法的第一个参数(并删除第一个参数)，该参数是构造函数
+  var Constructor = [].shift.apply(arguments);
+  //将新对象的内部属性__proto__指向构造函数的原型，这样新对象就可以访问原型中的属性和方法
+  obj.__proto__ = Constructor.prototype;
+  //取得构造函数的返回值
+  var ret = Constructor.apply(obj, arguments);
+  //如果返回值是一个对象就返回该对象，否则返回构造函数的一个实例对象
+  return typeof ret === "object" ? ret : obj;
+}
+```
+
+# 37.什么是回调函数
+
+回调函数是一段可执行的代码段，它作为一个参数传递给其他的代码，其作用是在需要的时候方便调用这段（回调函数）代码。
+
+在 JavaScript 中函数也是对象的一种，同样对象可以作为参数传递给函数，因此函数也可以作为参数传递给另外一个函数，这个作为参数的函数就是回调函数。
+
+```js
+const btnAdd = document.getElementById("btnAdd");
+
+btnAdd.addEventListener("click", function clickCallback(e) {
+  // do something useless
+});
+```
+
+在本例中，我们等待 id 为 btnAdd 的元素中的 click 事件，如果它被单击，则执行 clickCallback 函数。回调函数向某些数据或事件添加一些功能。
+回调函数有一个致命的弱点，就是容易写出回调地狱（Callback hell）。假设多个事件存在依赖性：
+
+```js
+setTimeout(() => {
+  console.log(1);
+  setTimeout(() => {
+    console.log(2);
+    setTimeout(() => {
+      console.log(3);
+    }, 3000);
+  }, 2000);
+}, 1000);
+```
+
+这就是典型的回调地狱，以上代码看起来不利于阅读和维护，事件一旦多起来就更是乱糟糟，所以在 es6 中提出了 Promise 和 async/await 来解决回调地狱的问题。当然，回调函数还存在着别的几个缺点，比如不能使用 try catch 捕获错误，不能直接 return。接下来的两条就是来解决这些问题的，咱们往下看。
+
+# 38.Promise 是什么，可以手写实现一下吗？
+
+Promise 对象是一个代理对象（代理一个值），被代理的值在 Promise 对象创建时可能是未知的。它允许你为异步操作的成功和失败分别绑定相应的处理方法（handlers）。 这让异步方法可以像同步方法那样返回值，但并不是立即返回最终执行结果，而是一个能代表未来出现的结果的 promise 对象。
+一个 Promise 有以下几种状态:
+
+pending: 初始状态，既不是成功，也不是失败状态。
+fulfilled: 意味着操作成功完成。
+rejected: 意味着操作失败。
+
+这个承诺一旦从等待状态变成为其他状态就永远不能更改状态了，也就是说一旦状态变为 fulfilled/rejected 后，就不能再次改变。
+可能光看概念大家不理解 Promise，我们举个简单的栗子；
+
+假如我有个女朋友，下周一是她生日，我答应她生日给她一个惊喜，那么从现在开始这个承诺就进入等待状态，等待下周一的到来，然后状态改变。如果下周一我如约给了女朋友惊喜，那么这个承诺的状态就会由 pending 切换为 fulfilled，表示承诺成功兑现，一旦是这个结果了，就不会再有其他结果，即状态不会在发生改变；反之如果当天我因为工作太忙加班，把这事给忘了，说好的惊喜没有兑现，状态就会由 pending 切换为 rejected，时间不可倒流，所以状态也不能再发生变化。
+
+上一条我们说过 Promise 可以解决回调地狱的问题，没错，pending 状态的 Promise 对象会触发 fulfilled/rejected 状态，一旦状态改变，Promise 对象的 then 方法就会被调用；否则就会触发 catch。我们将上一条回调地狱的代码改写一下：
+
+```js
+new Promise((resolve，reject) => {
+     setTimeout(() => {
+            console.log(1)
+            resolve()
+        },1000)
+
+}).then((res) => {
+    setTimeout(() => {
+            console.log(2)
+        },2000)
+}).then((res) => {
+    setTimeout(() => {
+            console.log(3)
+        },3000)
+}).catch((err) => {
+console.log(err)
+})
+
+```
+
+其实 Promise 也是存在一些缺点的，比如无法取消 Promise，错误需要通过回调函数捕获。
+
+promise 手写实现，面试够用版：
+
+```js
+function myPromise(constructor) {
+  let self = this;
+  self.status = "pending"; //定义状态改变前的初始状态
+  self.value = undefined; //定义状态为resolved的时候的状态
+  self.reason = undefined; //定义状态为rejected的时候的状态
+  function resolve(value) {
+    //两个==="pending"，保证了状态的改变是不可逆的
+    if (self.status === "pending") {
+      self.value = value;
+      self.status = "resolved";
+    }
+  }
+  function reject(reason) {
+    //两个==="pending"，保证了状态的改变是不可逆的
+    if (self.status === "pending") {
+      self.reason = reason;
+      self.status = "rejected";
+    }
+  }
+  //捕获构造异常
+  try {
+    constructor(resolve, reject);
+  } catch (e) {
+    reject(e);
+  }
+}
+// 定义链式调用的then方法
+myPromise.prototype.then = function (onFullfilled, onRejected) {
+  let self = this;
+  switch (self.status) {
+    case "resolved":
+      onFullfilled(self.value);
+      break;
+    case "rejected":
+      onRejected(self.reason);
+      break;
+    default:
+  }
+};
+```
+
+# 39.Iterator 是什么，有什么作用？
+
+Iterator 是理解第 61 条的先决知识，也许是我 IQ 不够 😭，Iterator 和 Generator 看了很多遍还是一知半解，即使当时理解了，过一阵又忘得一干二净。。。
+Iterator（迭代器）是一种接口，也可以说是一种规范。为各种不同的数据结构提供统一的访问机制。任何数据结构只要部署 Iterator 接口，就可以完成遍历操作（即依次处理该数据结构的所有成员）。
+Iterator 语法：
+
+```js
+const obj = {
+  [Symbol.iterator]: function () {},
+};
+```
+
+[Symbol.iterator] 属性名是固定的写法，只要拥有了该属性的对象，就能够用迭代器的方式进行遍历。
+迭代器的遍历方法是首先获得一个迭代器的指针，初始时该指针指向第一条数据之前，接着通过调用 next 方法，改变指针的指向，让其指向下一条数据
+每一次的 next 都会返回一个对象，该对象有两个属性
+
+value 代表想要获取的数据
+done 布尔值，false 表示当前指针指向的数据有值，true 表示遍历已经结束
+
+Iterator 的作用有三个：
+
+    为各种数据结构，提供一个统一的、简便的访问接口；
+    使得数据结构的成员能够按某种次序排列；
+    ES6 创造了一种新的遍历命令for…of循环，Iterator 接口主要供for…of消费。
+
+遍历过程：
+
+    创建一个指针对象，指向当前数据结构的起始位置。也就是说，遍历器对象本质上，就是一个指针对象。
+    第一次调用指针对象的next方法，可以将指针指向数据结构的第一个成员。
+    第二次调用指针对象的next方法，指针就指向数据结构的第二个成员。
+    不断调用指针对象的next方法，直到它指向数据结构的结束位置。
+
+每一次调用 next 方法，都会返回数据结构的当前成员的信息。具体来说，就是返回一个包含 value 和 done 两个属性的对象。其中，value 属性是当前成员的值，done 属性是一个布尔值，表示遍历是否结束。
+
+```js
+let arr = [{ num: 1 }, 2, 3];
+let it = arr[Symbol.iterator](); // 获取数组中的迭代器
+console.log(it.next()); // { value: Object { num: 1 }, done: false }
+console.log(it.next()); // { value: 2, done: false }
+console.log(it.next()); // { value: 3, done: false }
+console.log(it.next()); // { value: undefined, done: true }
+```
+
+# 40.Generator 函数是什么，有什么作用？
+
+Generator 函数可以说是 Iterator 接口的具体实现方式。Generator 最大的特点就是可以控制函数的执行。
+
+```js
+function* foo(x) {
+  let y = 2 * (yield x + 1);
+  let z = yield y / 3;
+  return x + y + z;
+}
+let it = foo(5);
+console.log(it.next()); // => {value: 6, done: false}
+console.log(it.next(12)); // => {value: 8, done: false}
+console.log(it.next(13)); // => {value: 42, done: true}
+```
+
+上面这个示例就是一个 Generator 函数，我们来分析其执行过程：
+
+      首先 Generator 函数调用时它会返回一个迭代器
+      当执行第一次 next 时，传参会被忽略，并且函数暂停在 yield (x + 1) 处，所以返回 5 + 1 = 6
+      当执行第二次 next 时，传入的参数等于上一个 yield 的返回值，如果你不传参，yield 永远返回 undefined。此时 let y = 2 * 12，所以第二个 yield 等于 2 * 12 / 3 = 8
+      当执行第三次 next 时，传入的参数会传递给 z，所以 z = 13, x = 5, y = 24，相加等于 42
+
+Generator 函数一般见到的不多，其实也于他有点绕有关系，并且一般会配合 co 库去使用。当然，我们可以通过 Generator 函数解决回调地狱的问题。
+
+# 41.什么是 async/await 及其如何工作,有什么优缺点？
+
+async/await 是一种建立在 Promise 之上的编写异步或非阻塞代码的新方法，被普遍认为是 JS 异步操作的最终且最优雅的解决方案。相对于 Promise 和回调，它的可读性和简洁度都更高。毕竟一直 then()也很烦。
+async 是异步的意思，而 await 是 async wait 的简写，即异步等待。
+所以从语义上就很好理解 async 用于声明一个 function 是异步的，而 await 用于等待一个异步方法执行完成。
+一个函数如果加上 async ，那么该函数就会返回一个 Promise
+
+```js
+async function test() {
+  return "1";
+}
+console.log(test()); // -> Promise {<resolved>: "1"}
+```
+
+可以看到输出的是一个 Promise 对象。所以，async 函数返回的是一个 Promise 对象，如果在 async 函数中直接 return 一个直接量，async 会把这个直接量通过 PromIse.resolve() 封装成 Promise 对象返回。
+相比于 Promise，async/await 能更好地处理 then 链
+
+```js
+function takeLongTime(n) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(n + 200), n);
+  });
+}
+
+function step1(n) {
+  console.log(`step1 with ${n}`);
+  return takeLongTime(n);
+}
+
+function step2(n) {
+  console.log(`step2 with ${n}`);
+  return takeLongTime(n);
+}
+
+function step3(n) {
+  console.log(`step3 with ${n}`);
+  return takeLongTime(n);
+}
+```
+
+现在分别用 Promise 和 async/await 来实现这三个步骤的处理。
+
+使用 Promise
+
+```js
+function doIt() {
+  console.time("doIt");
+  const time1 = 300;
+  step1(time1)
+    .then((time2) => step2(time2))
+    .then((time3) => step3(time3))
+    .then((result) => {
+      console.log(`result is ${result}`);
+    });
+}
+doIt();
+// step1 with 300
+// step2 with 500
+// step3 with 700
+// result is 900
+```
+
+使用 async/await
+
+```js
+async function doIt() {
+  console.time("doIt");
+  const time1 = 300;
+  const time2 = await step1(time1);
+  const time3 = await step2(time2);
+  const result = await step3(time3);
+  console.log(`result is ${result}`);
+}
+doIt();
+```
+
+结果和之前的 Promise 实现是一样的，但是这个代码看起来是不是清晰得多，优雅整洁，几乎跟同步代码一样。
+
+await 关键字只能在 async function 中使用。在任何非 async function 的函数中使用 await 关键字都会抛出错误。await 关键字在执行下一行代码之前等待右侧表达式(可能是一个 Promise)返回。
+
+优缺点：
+
+async/await 的优势在于处理 then 的调用链，能够更清晰准确的写出代码，并且也能优雅地解决回调地狱问题。当然也存在一些缺点，因为 await 将异步代码改造成了同步代码，如果多个异步代码没有依赖性却使用了 await 会导致性能上的降低。
+
+# 42. instanceof 的原理是什么，如何实现
+
+instanceof 可以正确的判断对象的类型，因为内部机制是通过判断对象的原型链中是不是能找到类型的 prototype。
+实现 instanceof：
+
+首先获取类型的原型
+然后获得对象的原型
+然后一直循环判断对象的原型是否等于类型的原型，直到对象原型为 null，因为原型链最终为 null
+
+```js
+function myInstanceof(left, right) {
+  let prototype = right.prototype;
+  left = left.__proto__;
+  while (true) {
+    if (left === null || left === undefined) return false;
+    if (prototype === left) return true;
+    left = left.__proto__;
+  }
+}
+```
+
+# 43. js 的节流与防抖
+
+函数防抖 是指在事件被触发 n 秒后再执行回调，如果在这 n 秒内事件又被触发，则重新计时。这可以使用在一些点击请求的事件上，避免因为用户的多次点击向后端发送多次请求。
+函数节流 是指规定一个单位时间，在这个单位时间内，只能有一次触发事件的回调函数执行，如果在同一个单位时间内某事件被触发多次，只有一次能生效。节流可以使用在 scroll 函数的事件监听上，通过事件节流来降低事件调用的频率。
+
+```js
+// 函数防抖的实现
+function debounce(fn, wait) {
+  var timer = null;
+
+  return function () {
+    var context = this,
+      args = arguments;
+
+    // 如果此时存在定时器的话，则取消之前的定时器重新记时
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
+    // 设置定时器，使事件间隔指定事件后执行
+    timer = setTimeout(() => {
+      fn.apply(context, args);
+    }, wait);
+  };
+}
+
+// 函数节流的实现;
+function throttle(fn, delay) {
+  var preTime = Date.now();
+
+  return function () {
+    var context = this,
+      args = arguments,
+      nowTime = Date.now();
+
+    // 如果两次时间间隔超过了指定时间，则执行函数。
+    if (nowTime - preTime >= delay) {
+      preTime = Date.now();
+      return fn.apply(context, args);
+    }
+  };
+}
+```
