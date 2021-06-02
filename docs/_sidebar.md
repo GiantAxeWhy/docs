@@ -15,6 +15,8 @@
   - [proxy](proxy.md)
   - [Iterator 和 for...of 循环](Iterator.md)
   - [Generator 函数的语法](Generator.md)
+  - [async](async.md)
+  - [class 的语法与继承](class.md)
   - [Javascript 汇总](javaScript.md)
 
 - CSS
