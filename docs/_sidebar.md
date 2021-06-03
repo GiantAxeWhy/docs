@@ -28,4 +28,8 @@
 
 - VUE&&REACT
 
-  [手写简易 VUE](vue-mini.md) [VUE 与 React 的区别](diff-vueReact.md) [VUE 相关](vue-test.md) [vue 源码手撸系列](vue-regionCode.md)
+- [手写简易 VUE](vue-mini.md)
+- [VUE 与 React 的区别](diff-vueReact.md)
+- [VUE 相关](vue-test.md)
+- [vue 源码手撸系列](vue-regionCode.md)
+- [vue 3](vue3.md)
