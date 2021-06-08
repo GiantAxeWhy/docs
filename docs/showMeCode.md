@@ -1,6 +1,6 @@
 # 36 道 JS 手写题
 
-## 数据类型判断
+# 数据类型判断
 
 ```js
 function typeOf(obj) {
@@ -9,7 +9,7 @@ function typeOf(obj) {
 }
 ```
 
-## 继承
+# 继承
 
 ### 原型链继承
 
@@ -121,7 +121,7 @@ class Dog extend Animal{
 }
 ```
 
-### 数组去重
+# 数组去重
 
 es5
 
@@ -140,7 +140,7 @@ es6
 var unique = (arr) => [...new Set(arr)];
 ```
 
-### 数组扁平化
+# 数组扁平化
 
 flat 的实现
 递归
@@ -170,7 +170,7 @@ function flatten(arr) {
 }
 ```
 
-### 深浅拷贝
+# 深浅拷贝
 
 浅拷贝：只考虑对象类型。
 
@@ -238,7 +238,7 @@ function deepClone(target, map = new WeakMap()) {
 }
 ```
 
-### 事件总线（发布订阅）
+# 事件总线（发布订阅）
 
 ```js
 class EventEmitter {
@@ -290,7 +290,7 @@ eventBus.emit("aaa", false, "布兰", 12);
 // 'hello, 布兰 12'
 ```
 
-### 解析 URL 参数为对象
+# 解析 URL 参数为对象
 
 ```js
 function parseParam(url) {
@@ -322,7 +322,7 @@ function parseParam(url) {
 }
 ```
 
-### 字符串模板
+# 字符串模板
 
 ```js
 function render(template, data) {
@@ -348,7 +348,7 @@ let person = {
 render(template, person); // 我是布兰，年龄12，性别undefined
 ```
 
-### 图片懒加载
+# 图片懒加载
 
 与普通的图片懒加载不同，如下这个多做了 2 个精心处理：
 
@@ -384,7 +384,7 @@ const imgLazyLoad = function () {
 document.addEventListener("scroll", imgLazyLoad);
 ```
 
-### 防抖
+# 防抖
 
 触发高频事件 N 秒后只会执行一次，如果 N 秒内事件再次触发，则会重新计时。
 
@@ -465,7 +465,7 @@ node.onmousemove = setUseAction;
 setUseAction.cancel();
 ```
 
-### 函数节流
+# 函数节流
 
 触发高频事件，且 N 秒内只执行一次。
 
@@ -532,7 +532,7 @@ function throttle(func, wait, options) {
 }
 ```
 
-### 函数柯里化
+# 函数柯里化
 
 什么叫函数柯里化？其实就是将使用多个参数的函数转换成一系列使用一个参数的函数的技术。还不懂？来举个例子。
 
@@ -553,7 +553,7 @@ let addCurry = curry(add);
 addCurry(1)(2)(3);
 ```
 
-### 偏函数
+# 偏函数
 
 什么是偏函数？偏函数就是将一个 n 参的函数转换成固定 x 参的函数，剩余参数（n - x）将在下次调用全部传入。举个例子：
 
@@ -597,7 +597,7 @@ function partial(fn, ...args) {
 
 ```
 
-### JSONP
+# JSONP
 
 JSONP 核心原理：script 标签不受同源策略约束，所以可以用来进行跨域请求，优点是兼容性好，但是只能用于 GET 请求；
 
@@ -625,7 +625,7 @@ const jsonp = ({ url, params, callbackName }) => {
 };
 ```
 
-### AJAX
+# AJAX
 
 ```js
 const getJSON = function (url) {
@@ -648,9 +648,9 @@ const getJSON = function (url) {
 };
 ```
 
-### 实现数组原型的方法
+# 实现数组原型的方法
 
-#### 实现 map
+# 实现 map
 
 map 方法接收一个回调函数，函数内接收三个参数，当前项、索引、原数组，返回一个新的数组，并且数组长度不变。 知道了这些特征之后，我们用 reduce 重塑 map 。
 
@@ -671,7 +671,7 @@ testArr.reduceMap((item, index) => {
 
 在 Array  的原型链上添加 reduceMap  方法，接收一个回调函数 callback 作为参数（就是 map  传入的回调函数），内部通过 this  拿到当前需要操作的数组，这里 reduce  方法的第二个参数初始值很关键，需要设置成一个 [] ，这样便于后面把操作完的单项塞入 acc 。我们需要给 callback  方法传入三个值，当前项、索引、原数组，也就是原生 map  回调函数能拿到的值。返回 item  塞进 acc，并且返回 acc ，作为下一个循环的 acc（贪吃蛇原理）。最终 this.reduce  返回了新的数组，并且长度不变。
 
-#### forEach
+# forEach
 
 forEach 接收一个回调函数作为参数，函数内接收四个参数当前项、索引、原函数、当执行回调函数 callback 时，用作 this 的值，并且不返回值
 
@@ -690,7 +690,7 @@ testArr.reduceForEach((item, index, array) => {
 // 0123
 ```
 
-#### filter
+# filter
 
 filter 同样接收一个回调函数，回调函数返回 true 则返回当前项，反之则不返回。回调函数接收的参数同 forEach 。
 
@@ -710,7 +710,7 @@ testArr.reduceFilter((item) => item % 2 == 0); // 过滤出偶数项。
 
 filter 方法中 callback 返回的是 Boolean 类型，所以通过 if 判断是否要塞入累计器 acc ，并且返回 acc 给下一次对比。最终返回整个过滤后的数组。
 
-#### find
+# find
 
 find 方法中 callback 同样也是返回 Boolean 类型，返回你要找的第一个符合要求的项。
 
@@ -738,7 +738,7 @@ testObj.reduceFind((item) => item.a % 9 == 0); // undefined
 
 你不知道操作的数组是对象数组还是普通数组，所以这里只能直接覆盖 acc 的值，找到第一个符合判断标准的值就不再进行赋值操作。
 
-#### some
+# some
 
 ```js
 O.length >>> 0 是什么操作？就是无符号右移 0 位，那有什么意义嘛？就是为了保证转换后的值为正整数。其实底层做了 2 层转换，第一是非 number 转成 number 类型，第二是将 number 转成 Uint32 类型。
@@ -764,7 +764,7 @@ Array.prototype.some2 = function (callback, thisArg) {
 };
 ```
 
-#### reduce
+# reduce
 
 ```js
 Array.prototype.reduce2 = function (callback, initialValue) {
@@ -801,7 +801,7 @@ Array.prototype.reduce2 = function (callback, initialValue) {
 };
 ```
 
-### 实现函数原型
+# 实现函数原型
 
 使用一个指定的 this 值和一个或多个参数来调用一个函数。
 
@@ -811,7 +811,7 @@ this 可能传入 null；
 传入不固定个数的参数；
 函数可能有返回值；
 
-#### call
+# call
 
 ```js
 Function.prototype.call2 = function (context) {
@@ -827,7 +827,7 @@ Function.prototype.call2 = function (context) {
 };
 ```
 
-#### apply
+# apply
 
 apply 和 call 一样，唯一的区别就是 call 是传入不固定个数的参数，而 apply 是传入一个数组。
 
@@ -858,7 +858,7 @@ Function.prototype.apply2 = function (context, arr) {
 };
 ```
 
-#### bind
+# bind
 
 bind 方法会创建一个新的函数，在 bind() 被调用时，这个新函数的 this 被指定为 bind() 的第一个参数，而其余参数将作为新函数的参数，供调用时使用。
 实现要点：
@@ -889,7 +889,7 @@ Function.prototype.bind2 = function (context) {
 };
 ```
 
-#### 使用 new 关键字
+# 使用 new 关键字
 
 new 运算符用来创建用户自定义的对象类型的实例或者具有构造函数的内置对象的实例。
 实现要点
@@ -917,7 +917,7 @@ let p = objectFactory(person, "布兰", 12);
 console.log(p); // { name: '布兰', age: 12 }
 ```
 
-#### instanceof 实现
+# instanceof 实现
 
 instanceof 就是判断构造函数的 prototype 属性是否出现在实例的原型链上。
 
@@ -936,7 +936,7 @@ function instanceof(left, right) {
 
 上面的 left.proto 这种写法可以换成 Object.getPrototypeOf(left)。
 
-#### 实现 Object.create
+# 实现 Object.create
 
 Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的*proto*。
 
@@ -962,7 +962,7 @@ Object.create2 = function (proto, propertyObject = undefined) {
 };
 ```
 
-#### Object.assign
+# Object.assign
 
 ```js
 Object.assign2 = function (target, ...source) {
@@ -983,7 +983,7 @@ Object.assign2 = function (target, ...source) {
 };
 ```
 
-#### 实现 JSON.stringify
+# 实现 JSON.stringify
 
 JSON.stringify([, replacer [, space]) 方法是将一个 JavaScript 值(对象或者数组)转换为一个 JSON 字符串。此处模拟实现，不考虑可选的第二个参数 replacer 和第三个参数 space，如果对这两个参数的作用还不了解，建议阅读 MDN 文档。
 
@@ -1082,7 +1082,7 @@ function jsonStringify(data) {
 }
 ```
 
-#### 实现 JSON.parse
+# 实现 JSON.parse
 
 介绍 2 种方法实现：
 
@@ -1101,7 +1101,8 @@ var obj = eval("(" + json + ")"); // obj 就是 json 反序列化之后得到的
 ```js
 var rx_one = /^[\],:{}\s]*$/;
 var rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g;
-var rx_three = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
+var rx_three =
+  /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
 var rx_four = /(?:^|:|,)(?:\s*\[)+/g;
 
 if (
@@ -1121,7 +1122,7 @@ var json = '{"name":"小姐姐", "age":20}';
 var obj = new Function("return " + json)();
 ```
 
-#### 实现 promise
+# 实现 promise
 
 实现 Promise 需要完全读懂 Promise A+ 规范，不过从总体的实现上看，有如下几个点需要考虑到：
 
@@ -1301,7 +1302,7 @@ promises-aplus-tests promise.js
 复制代码
 上面写的代码可以顺利通过全部 872 个测试用例。
 
-##### Promise.resolve
+# Promise.resolve
 
 Promsie.resolve(value) 可以将任何值转成值为 value 状态是 fulfilled 的 Promise，但如果传入的值本身是 Promise 则会原样返回它。
 
@@ -1315,7 +1316,7 @@ Promise.resolve = function (value) {
 };
 ```
 
-##### Promise.reject
+# Promise.reject
 
 和 Promise.resolve() 类似，Promise.reject() 会实例化一个 rejected 状态的 Promise。但与 Promise.resolve() 不同的是，如果给 Promise.reject() 传递一个 Promise 对象，则这个对象会成为新 Promise 的值。
 
@@ -1325,7 +1326,7 @@ Promise.reject = function (reason) {
 };
 ```
 
-##### Promise.all
+# Promise.all
 
 Promise.all 的规则是这样的：
 
@@ -1356,7 +1357,7 @@ Promise.all = function (promiseArr) {
 };
 ```
 
-##### Promise.race
+# Promise.race
 
 Promise.race 会返回一个由所有可迭代实例中第一个 fulfilled 或 rejected 的实例包装后的新实例。
 
@@ -1377,7 +1378,7 @@ Promise.race = function (promiseArr) {
 };
 ```
 
-##### Promise.allSettled
+# Promise.allSettled
 
 Promise.allSettled 的规则是这样：
 
@@ -1415,7 +1416,7 @@ Promise.allSettled = function (promiseArr) {
 };
 ```
 
-##### Promise.any
+# Promise.any
 
 Promise.any 的规则是这样：
 
@@ -1443,4 +1444,288 @@ Promise.any = function (promiseArr) {
     });
   });
 };
+```
+
+# 异步并发数限制
+
+/\*\*
+
+- 关键点
+- 1.  new promise 一经创建，立即执行
+- 2.  使用 Promise.resolve().then 可以把任务加到微任务队列，防止立即执行迭代方法
+- 3.  微任务处理过程中，产生的新的微任务，会在同一事件循环内，追加到微任务队列里
+- 4.  使用 race 在某个任务完成时，继续添加任务，保持任务按照最大并发数进行执行
+- 5.  任务完成后，需要从 doingTasks 中移出
+      \*/
+
+```js
+function limit(count, array, iterateFunc) {
+  const tasks = [];
+  const doingTasks = [];
+  let i = 0;
+  const enqueue = () => {
+    if (i === array.length) {
+      return Promise.resolve();
+    }
+    const task = Promise.resolve().then(() => iterateFunc(array[i++]));
+    tasks.push(task);
+    const doing = task.then(() =>
+      doingTasks.splice(doingTasks.indexOf(doing), 1)
+    );
+    doingTasks.push(doing);
+    const res =
+      doingTasks.length >= count ? Promise.race(doingTasks) : Promise.resolve();
+    return res.then(enqueue);
+  };
+  return enqueue().then(() => Promise.all(tasks));
+}
+
+// test
+const timeout = (i) =>
+  new Promise((resolve) => setTimeout(() => resolve(i), i));
+limit(2, [1000, 1000, 1000, 1000], timeout).then((res) => {
+  console.log(res);
+});
+```
+
+# 异步串行 | 异步并行
+
+```js
+// 字节面试题，实现一个异步加法
+function asyncAdd(a, b, callback) {
+  setTimeout(function () {
+    callback(null, a + b);
+  }, 500);
+}
+
+// 解决方案
+// 1. promisify
+const promiseAdd = (a, b) =>
+  new Promise((resolve, reject) => {
+    asyncAdd(a, b, (err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
+  });
+
+// 2. 串行处理
+async function serialSum(...args) {
+  return args.reduce(
+    (task, now) => task.then((res) => promiseAdd(res, now)),
+    Promise.resolve(0)
+  );
+}
+
+// 3. 并行处理
+async function parallelSum(...args) {
+  if (args.length === 1) return args[0];
+  const tasks = [];
+  for (let i = 0; i < args.length; i += 2) {
+    tasks.push(promiseAdd(args[i], args[i + 1] || 0));
+  }
+  const results = await Promise.all(tasks);
+  return parallelSum(...results);
+}
+
+// 测试
+(async () => {
+  console.log("Running...");
+  const res1 = await serialSum(1, 2, 3, 4, 5, 8, 9, 10, 11, 12);
+  console.log(res1);
+  const res2 = await parallelSum(1, 2, 3, 4, 5, 8, 9, 10, 11, 12);
+  console.log(res2);
+  console.log("Done");
+})();
+```
+
+# vue reactive
+
+```js
+// Dep module
+class Dep {
+  static stack = [];
+  static target = null;
+  deps = null;
+
+  constructor() {
+    this.deps = new Set();
+  }
+
+  depend() {
+    if (Dep.target) {
+      this.deps.add(Dep.target);
+    }
+  }
+
+  notify() {
+    this.deps.forEach((w) => w.update());
+  }
+
+  static pushTarget(t) {
+    if (this.target) {
+      this.stack.push(this.target);
+    }
+    this.target = t;
+  }
+
+  static popTarget() {
+    this.target = this.stack.pop();
+  }
+}
+
+// reactive
+function reactive(o) {
+  if (o && typeof o === "object") {
+    Object.keys(o).forEach((k) => {
+      defineReactive(o, k, o[k]);
+    });
+  }
+  return o;
+}
+
+function defineReactive(obj, k, val) {
+  let dep = new Dep();
+  Object.defineProperty(obj, k, {
+    get() {
+      dep.depend();
+      return val;
+    },
+    set(newVal) {
+      val = newVal;
+      dep.notify();
+    },
+  });
+  if (val && typeof val === "object") {
+    reactive(val);
+  }
+}
+
+// watcher
+class Watcher {
+  constructor(effect) {
+    this.effect = effect;
+    this.update();
+  }
+
+  update() {
+    Dep.pushTarget(this);
+    this.value = this.effect();
+    Dep.popTarget();
+    return this.value;
+  }
+}
+
+// 测试代码
+const data = reactive({
+  msg: "aaa",
+});
+
+new Watcher(() => {
+  console.log("===> effect", data.msg);
+});
+
+setTimeout(() => {
+  data.msg = "hello";
+}, 1000);
+```
+
+# 深拷贝
+
+递归
+对象分类型讨论
+解决循环引用（环）
+
+```js
+class DeepClone {
+  constructor() {
+    this.cacheList = [];
+  }
+  clone(source) {
+    if (source instanceof Object) {
+      const cache = this.findCache(source);
+      if (cache) return cache;
+      // 如果找到缓存，直接返回
+      else {
+        let target;
+        if (source instanceof Array) {
+          target = new Array();
+        } else if (source instanceof Function) {
+          target = function () {
+            return source.apply(this, arguments);
+          };
+        } else if (source instanceof Date) {
+          target = new Date(source);
+        } else if (source instanceof RegExp) {
+          target = new RegExp(source.source, source.flags);
+        }
+        this.cacheList.push([source, target]); // 把源对象和新对象放进缓存列表
+        for (let key in source) {
+          if (source.hasOwnProperty(key)) {
+            // 不拷贝原型上的属性，太浪费内存
+            target[key] = this.clone(source[key]); // 递归克隆
+          }
+        }
+        return target;
+      }
+    }
+    return source;
+  }
+  findCache(source) {
+    for (let i = 0; i < this.cacheList.length; ++i) {
+      if (this.cacheList[i][0] === source) {
+        return this.cacheList[i][1]; // 如果有环，返回对应的新对象
+      }
+    }
+    return undefined;
+  }
+}
+```
+
+尤雨希版本
+
+```js
+function find(list, f) {
+  return list.filter(f)[0];
+}
+
+function deepCopy(obj, cache = []) {
+  // just return if obj is immutable value
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  // if obj is hit, it is in circular structure
+  const hit = find(cache, (c) => c.original === obj);
+  if (hit) {
+    return hit.copy;
+  }
+
+  const copy = Array.isArray(obj) ? [] : {};
+  // put the copy into cache at first
+  // because we want to refer it in recursive deepCopy
+  cache.push({
+    original: obj,
+    copy,
+  });
+  Object.keys(obj).forEach((key) => (copy[key] = deepCopy(obj[key], cache)));
+
+  return copy;
+}
+```
+# const
+```js
+function _const(key, value) {
+    const desc = {
+        value,
+        writable: false
+    }
+    Object.defineProperty(window, key, desc)
+}
+
+_const('obj', {i: 1})   //定义obj
+obj.b = 3               //可以正常给obj的属性赋值
+obj = {}                //抛出错误，提示对象read-only
 ```

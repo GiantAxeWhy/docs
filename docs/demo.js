@@ -56,3 +56,26 @@ function falten(arr) {
     Array.isArray(cur) ? [...pre, falten(cur)] : [...pre, cur];
   });
 }
+
+//继承
+
+function Animal(val) {
+  this.name = val;
+}
+Animal.prototype.getName = function () {
+  return this.name;
+};
+function Cat(name) {
+  Animal.call(this, name);
+}
+Cat.prototype = Object.create(Animal.prototype, { constructor: Cat });
+Cat.prototype.memow = function () {
+  return this.getName();
+};
+const cat = new Cat("石榴");
+console.log(cat.memow());
+
+//call
+Function.prototype.myCall()=function(context,){
+
+}

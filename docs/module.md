@@ -42,10 +42,10 @@ import { stat, exists, readFile } from 'fs';
 
 它们有三个重大差异。
 
-CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。
-CommonJS 模块是运行时加载，ES6 模块是编译时输出接口。
-CommonJS 模块的 require()是同步加载模块，ES6 模块的 import 命令是异步加载，有一个独立的模块依赖的解析阶段。
-第二个差异是因为 CommonJS 加载的是一个对象（即 module.exports 属性），该对象只有在脚本运行完才会生成。而 ES6 模块不是对象，它的对外接口只是一种静态定义，在代码静态解析阶段就会生成。
+      CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。
+      CommonJS 模块是运行时加载，ES6 模块是编译时输出接口。
+      CommonJS 模块的 require()是同步加载模块，ES6 模块的 import 命令是异步加载，有一个独立的模块依赖的解析阶段。
+      第二个差异是因为 CommonJS 加载的是一个对象（即 module.exports 属性），该对象只有在脚本运行完才会生成。而 ES6 模块不是对象，它的对外接口只是一种静态定义，在代码静态解析阶段就会生成。
 
 下面重点解释第一个差异。
 
@@ -95,6 +95,7 @@ module.exports = {
 $ node main.js
 3
 4
+
 ES6 模块的运行机制与 CommonJS 不一样。JS 引擎对脚本静态分析的时候，遇到模块加载命令 import，就会生成一个只读引用。等到脚本真正执行时，再根据这个只读引用，到被加载的那个模块里面去取值。换句话说，ES6 的 import 有点像 Unix 系统的“符号连接”，原始值变了，import 加载的值也会跟着变。因此，ES6 模块是动态引用，并且不会缓存值，模块里面的变量绑定其所在的模块。
 
 ```js
@@ -133,11 +134,15 @@ export let bar = "bar";
 
 上面代码中，a.mjs 加载 b.mjs，b.mjs 又加载 a.mjs，构成循环加载。执行 a.mjs，结果如下。
 
+```js
 $ node --experimental-modules a.mjs
+```
 
 b.mjs
 
+```js
 ReferenceError: foo is not defined
+```
 
 上面代码中，执行 a.mjs 以后会报错，foo 变量未定义，这是为什么？
 
