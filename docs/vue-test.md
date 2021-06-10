@@ -1,5 +1,7 @@
 ### vue 汇总
 
+# Vue.js 的核心是一个允许采用简洁的模板语法来声明式地将数据渲染进 DOM 的系统。
+
 # 1、MVC 与 MVVM 区别
 
 MVC
@@ -406,6 +408,94 @@ $on、$emit 是基于发布订阅模式的，维护一个事件中心，on 的�
       触发 DOM 更新。
       调用 beforeRouteEnter 守卫中传给 next 的回调函数，创建好的组件实例会作为回调函数的参数传入。
 
+全局前置守卫
+
+```js
+const router = new VueRouter({})
+router.beforeEach((to, from, next) = {
+  // to do somethings
+})
+```
+
+      to:Route,代表要进入的目标，它是一个路由对象。
+
+      from:Route,代表当前正要离开的路由，也是一个路由对象
+
+      next:Function,必须需要调用的方法，具体的执行效果则依赖 next 方法调用的参数
+
+      next():进入管道中的下一个钩子，如果全部的钩子执行完了，则导航的状态就是 comfirmed（确认的）
+      next(false):终端当前的导航。如浏览器 URL 改变，那么 URL 会充值到 from 路由对应的地址。
+      next('/')||next({path:'/'}):跳转到一个不同的地址。当前导航终端，执行新的导航。
+
+      - next 方法必须调用，否则钩子函数无法 resolved
+
+全局后置钩子
+
+```js
+router.afterEach((to, from) = {
+// to do somethings
+})
+
+```
+
+    后置钩子并没有next函数，也不会改变导航本身。
+
+    路由独享钩子
+
+    beforEnter
+
+```js
+    const router = new VueRouter({
+  routes: [
+    {
+      path: '/home',
+      component: Home，
+      beforeEnter: (to, from, next) = {
+        // to do somethings
+        // 参数与全局守卫参数一样
+    	}
+    }
+  ]
+})
+```
+
+组件内导航钩子
+
+```js
+const Home = {
+  template: `<div></div>`,
+  beforeRouteEnter(to, from, next) {
+    // 在渲染该组件的对应路由被 confirm 前调用
+    // 不能获取组件实例 ‘this’，因为当守卫执行前，组件实例还没被创建
+  },
+  beforeRouteUpdate(to, from, next) {
+    // 在当前路由改变，但是该组件被复用时调用
+    // 例：对于一个动态参数的路径 /home/:id,在/home/1 和 /home/2 之间跳转的时候
+    // 由于会渲染同样的 Home 组件，因此组件实例会被复用，而这个钩子就会在这个情况下被调用。
+    // 可以访问组件实例 'this'
+  },
+  beforeRouteLeave(to, from, next) {
+    // 导航离开该组件的对应路由时调用
+    // 可以访问组件实例 'this'
+  },
+};
+```
+
+beforeRouterEnter 不能访问 this，因为守卫在导航确认前被调用，因此新组建还没有被创建,可以通过传一个回调给 next 来访问组件实例。在导航被确认的时候执行回调，并把实例作为回调的方法参数。
+
+```js
+const Home = {
+  template: `<div></div>`,
+  beforeRouteEnter(to, from, next) {
+    next(
+      (vm = {
+        // 通过 'vm' 访问组件实例
+      })
+    );
+  },
+};
+```
+
 # 20 vue-router 动态路由是什么 有什么问题
 
 我们经常需要把某种模式匹配到的所有路由，全都映射到同个组件。例如，我们有一个 User 组件，对于所有 ID 各不相同的用户，都要使用这个组件来渲染。那么，我们可以在 vue-router 的路由路径中使用“动态路径参数”(dynamic segment) 来达到这个效果：
@@ -561,6 +651,24 @@ history 路由模式的实现主要基于存在下面几个特性：
       history.pushState() 或 history.replaceState() 不会触发 popstate 事件，这时我们需要手动触发页面跳转（渲染）。
 
 这两个方法应用于浏览器的历史记录站，在当前已有的 back、forward、go 的基础之上，它们提供了对历史记录进行修改的功能。这两个方法有个共同的特点：当调用他们修改浏览器历史记录栈后，虽然当前 URL 改变了，但浏览器不会刷新页面，这就为单页应用前端路由“更新视图但不重新请求页面”提供了基础。
+
+hash: 兼容所有浏览器，包括不支持 HTML5 History Api 的浏览器，例http://www.abc.com/#/index，hash值为#/index， hash 的改变会触发 hashchange 事件，通过监听 hashchange 事件来完成操作实现前端路由。hash 值变化不会让浏览器向服务器请求。
+
+```js
+// 监听 hash 变化，点击浏览器的前进后退会触发
+
+window.addEventListener(
+  "hashchange",
+  function (event) {
+    let newURL = event.newURL; // hash 改变后的新 url
+    let oldURL = event.oldURL; // hash 改变前的旧 url
+  },
+  false
+);
+```
+
+history: 兼容能支持 HTML5 History Api 的浏览器，依赖 HTML5 History API 来实现前端路由。没有#，路由地址跟正常的 url 一样，但是初次访问或者刷新都会向服务器请求，如果没有请求到对应的资源就会返回 404，所以路由地址匹配不到任何静态资源，则应该返回同一个 index.html 页面，需要在 nginx 中配置。
+abstract: 支持所有 JavaScript 运行环境，如 Node.js 服务器端。如果发现没有浏览器的 API，路由会自动强制进入这个模式。
 
 # 28. 你都做过哪些 Vue 的性能优化
 
@@ -953,3 +1061,492 @@ const listeners = data.on;
 data.on = data.nativeOn;
 installComponentHooks(data); // 安装组件相关钩子 （函数式组件没有调用此方法，从而性能高于普通组件）
 ```
+
+# 38.active-class 是哪个组件的属性？
+
+active-class 是 router-link 终端属性，用来做选中样式的切换，当 router-link 标签被点击时将会应用这个样式
+
+# 39.怎么定义 vue-router 的动态路由？怎么获取传过来的值？
+
+动态路由的创建，主要是使用 path 属性过程中，使用动态路径参数，以冒号开头，如下：
+
+```js
+{
+  path: "/details/:id";
+  name: "Details";
+  components: Details;
+}
+```
+
+访问 details 目录下的所有文件，如果 details/a，details/b 等，都会映射到 Details 组件上。
+
+当匹配到/details 下的路由时，参数值会被设置到 this.$route.params 下，所以通过这个属性可以获取动态参数
+      console.log(this.$route.params.id)
+
+# 40. $route 和 $router 的区别是什么？
+
+router 为 VueRouter 的实例，是一个全局路由对象，包含了路由跳转的方法、钩子函数等。
+route 是路由信息对象||跳转的路由对象，每一个路由都会有一个 route 对象，是一个局部对象，包含 path,params,hash,query,fullPath,matched,name 等路由信息参数。
+
+# 41.vue-router 传参
+
+Params
+
+    只能使用 name，不能使用 path
+    参数不会显示在路径上
+    浏览器强制刷新参数会被清空，
+
+```js
+  // 传递参数
+  this.$router.push({
+    name: Home，
+    params: {
+    	number: 1 ,
+    	code: '999'
+  	}
+  })
+  // 接收参数
+  const p = this.$route.params
+
+```
+
+Query:
+
+    参数会显示在路径上，刷新不会被清空
+    name 可以使用path路径
+
+```js
+// 传递参数
+this.$router.push({
+  name: Home，
+  query: {
+  number: 1 ,
+  code: '999'
+}
+                  })
+// 接收参数
+const q = this.$route.query
+
+```
+
+# 42.Vuex 中状态储存在哪里，怎么改变它？
+
+存储在 state 中，改变 Vuex 中的状态的唯一途径就是显式地提交 (commit) mutation。
+
+# 43.怎么在组件中批量使用 Vuex 的 state 状态？
+
+使用 mapState 辅助函数, 利用对象展开运算符将 state 混入 computed 对象中
+
+```js
+import { mapState } from "vuex";
+export default {
+  computed: {
+    ...mapState(["price", "number"]),
+  },
+};
+```
+
+# 43.Vuex 中要从 state 派生一些状态出来，且多个组件使用它，该怎么做，？
+
+使用 getter 属性，相当 Vue 中的计算属性 computed，只有原状态改变派生状态才会改变。
+getter 接收两个参数，第一个是 state，第二个是 getters(可以用来访问其他 getter)。
+
+```js
+const store = new Vuex.Store({
+  state: {
+    price: 10,
+    number: 10,
+    discount: 0.7,
+  },
+  getters: {
+    total: (state) => {
+      return state.price * state.number;
+    },
+    discountTotal: (state, getters) => {
+      return state.discount * getters.total;
+    },
+  },
+});
+```
+
+然后在组件中可以用计算属性 computed 通过 this.$store.getters.total 这样来访问这些派生转态。
+
+```js
+computed: {
+    total() {
+        return this.$store.getters.total
+    },
+    discountTotal() {
+        return this.$store.getters.discountTotal
+    }
+}
+
+```
+
+# 44.怎么通过 getter 来实现在组件内可以通过特定条件来获取 state 的状态？
+
+通过让 getter 返回一个函数，来实现给 getter 传参。然后通过参数来进行判断从而获取 state 中满足要求的状态。
+
+```js
+const store = new Vuex.Store({
+  state: {
+    todos: [
+      { id: 1, text: "...", done: true },
+      { id: 2, text: "...", done: false },
+    ],
+  },
+  getters: {
+    getTodoById: (state) => (id) => {
+      return state.todos.find((todo) => todo.id === id);
+    },
+  },
+});
+```
+
+然后在组件中可以用计算属性 computed 通过 this.$store.getters.getTodoById(2)这样来访问这些派生转态。
+
+```js
+computed: {
+    getTodoById() {
+        return this.$store.getters.getTodoById
+    },
+}
+mounted(){
+    console.log(this.getTodoById(2).done)//false
+}
+
+```
+
+# 45.在 Vuex 的 state 中有个状态 number 表示货物数量，在组件怎么改变它。
+
+首先要在 mutations 中注册一个 mutation
+
+```js
+const store = new Vuex.Store({
+  state: {
+    number: 10,
+  },
+  mutations: {
+    SET_NUMBER(state, data) {
+      state.number = data;
+    },
+  },
+});
+```
+
+在组件中使用 this.$store.commit 提交 mutation，改变 number
+
+```js
+this.$store.commit("SET_NUMBER", 10);
+```
+
+# 46.Vuex 中 action 和 mutation 有什么区别？
+
+      action 提交的是 mutation，而不是直接变更状态。mutation可以直接变更状态。
+      action 可以包含任意异步操作。mutation只能是同步操作。
+      提交方式不同，action 是用this.$store.dispatch('ACTION_NAME',data)来提交。mutation是用this.$store.commit('SET_NUMBER',10)来提交。
+      接收参数不同，mutation第一个参数是state，而action第一个参数是context，其包含了
+
+# 47.在模块中，getter 和 mutation 和 action 中怎么访问全局的 state 和 getter？
+
+    在getter中可以通过第三个参数rootState访问到全局的state,可以通过第四个参数rootGetters访问到全局的getter。
+    在mutation中不可以访问全局的satat和getter，只能访问到局部的state。
+    在action中第一个参数context中的context.rootState访问到全局的state，context.rootGetters访问到全局的getter。
+
+# 48.在组件中怎么访问 Vuex 模块中的 getter 和 state,怎么提交 mutation 和 action？
+
+    直接通过this.$store.getters和this.$store.state来访问模块中的getter和state。
+    直接通过this.$store.commit('mutationA',data)提交模块中的mutation。
+    直接通过this.$store.dispatch('actionA,data')提交模块中的action。
+
+# 49.Vuex 的严格模式是什么,有什么作用,怎么开启？
+
+在严格模式下，无论何时发生了状态变更且不是由 mutation 函数引起的，将会抛出错误。这能保证所有的状态变更都能被调试工具跟踪到。
+在 Vuex.Store 构造器选项中开启,如下
+const store = new Vuex.Store({
+strict:true,
+})
+
+# 50.全局导航守卫有哪些？怎么使用？
+
+      router.beforeEach：全局前置守卫。
+      router.beforeResolve：全局解析守卫。
+      router.afterEach：全局后置钩子。
+
+```js
+import VueRouter from "vue-router";
+const router = new VueRouter({
+  mode: "history",
+  base: "/",
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { x: 0, y: 0 };
+    }
+  },
+});
+router.beforeEach((to, from, next) => {
+  //...
+  next();
+});
+router.beforeResolve((to, from, next) => {
+  //...
+  next();
+});
+router.afterEach((to, from) => {
+  //...
+});
+```
+
+# 51.什么是路由独享的守卫，怎么使用？
+
+是 beforeEnter 守卫
+
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: "/foo",
+      component: Foo,
+      beforeEnter: (to, from, next) => {
+        // ...
+      },
+    },
+  ],
+});
+```
+
+# 52.说说你对 router-link 的了解
+
+<router-link>是 Vue-Router 的内置组件，在具有路由功能的应用中作为声明式的导航使用。
+<router-link>有 8 个 props，其作用是：
+
+    to：必填，表示目标路由的链接。当被点击后，内部会立刻把 to 的值传到 router.push()，所以这个值可以是一个字符串或者是描述目标位置的对象。
+
+```js
+<router-link to="home">Home</router-link>
+<router-link :to="'home'">Home</router-link>
+<router-link :to="{ path: 'home' }">Home</router-link>
+<router-link :to="{ name: 'user', params: { userId: 123 }}">User</router-link>
+<router-link :to="{ path: 'user', query: { userId: 123 }}">User</router-link>
+```
+
+      注意 path 存在时 params 不起作用，只能用 query
+      replace：默认值为 false，若设置的话，当点击时，会调用 router.replace()而不是 router.push()，于是导航后不会留下 history 记录。
+      append：设置 append 属性后，则在当前 (相对) 路径前添加基路径。
+      tag：让<router-link>渲染成 tag 设置的标签，如 tag:'li,渲染结果为<li>foo</li>。
+      active-class：默认值为 router-link-active,设置链接激活时使用的 CSS 类名。默认值可以通过路由的构造选项 linkActiveClass 来全局配置。
+      exact-active-class：默认值为 router-link-exact-active,设置链接被精确匹配的时候应该激活的 class。默认值可以通过路由构造函数选项 linkExactActiveClass 进行全局配置的。
+      exact：是否精确匹配，默认为 false。
+
+```js
+      <!-- 这个链接只会在地址为 / 的时候被激活 -->
+      <router-link to="/" exact></router-link>
+```
+
+event：声明可以用来触发导航的事件。可以是一个字符串或是一个包含字符串的数组，默认是 click。
+
+# 53.说说 active-class 是哪个组件的属性？
+
+<router-link/>组件的属性，设置链接激活时使用的 CSS 类名。默认值可以通过路由的构造选项 linkActiveClass 来全局配置。
+
+# 54.怎么实现路由懒加载呢？
+
+```js
+function load(component) {
+  //return resolve => require([`views/${component}`], resolve);
+  return () => import(`views/${component}`);
+}
+
+const routes = [
+  {
+    path: "/home",
+    name: "home",
+    component: load("home"),
+    meta: {
+      title: "首页",
+    },
+  },
+];
+```
+
+# 55.说说你对 SPA 单页面的理解，它的优缺点分别是什么？SPA 单页面的实现方式有哪些？
+
+是一种只需要将单个页面加载到服务器之中的 web 应用程序。当浏览器向服务器发出第一个请求时，服务器会返回一个 index.html 文件，它所需的 js，css 等会在显示时统一加载，部分页面按需加载。url 地址变化时不会向服务器在请求页面，通过路由才实现页面切换。
+优点：
+
+良好的交互体验，用户不需要重新刷新页面，获取数据也是通过 Ajax 异步获取，页面显示流畅；
+良好的前后端工作分离模式。
+
+缺点：
+
+SEO 难度较高，由于所有的内容都在一个页面中动态替换显示，所以在 SEO 上其有着天然的弱势。
+首屏加载过慢（初次加载耗时多）
+
+## 实现方式
+
+在 hash 模式中，在 window 上监听 hashchange 事件（地址栏中 hash 变化触发）驱动界面变化；
+在 history 模式中，在 window 上监听 popstate 事件（浏览器的前进或后退按钮的点击触发）驱动界面变化，监听 a 链接点击事件用 history.pushState、history.replaceState 方法驱动界面变化；
+直接在界面用显示隐藏事件驱动界面变化。
+
+# 56.说说你对 Object.defineProperty 的理解
+
+Object.defineProperty(obj,prop,descriptor)方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性， 并返回这个对象。
+
+obj：要在其上定义属性的对象。
+prop：要定义或修改的属性的名称。
+descriptor：将被定义或修改的属性描述符。
+
+descriptor 属性描述符主要有两种形式：数据描述符和存取描述符。描述符必须是这两种形式之一；不能同时是两者。
+
+数据描述符和存取描述符共同拥有
+
+configurable：特性表示对象的属性是否可以被删除，以及除 value 和 writable 特性外的其他特性是否可以被修改。默认为 false。
+enumerable：当该属性的 enumerable 为 true 时，该属性才可以在 for...in 循环和 Object.keys()中被枚举。默认为 false。
+
+数据描述符
+
+value：该属性对应的值。可以是任何有效的 JavaScript 值（数值，对象，函数等）。默认为 undefined。
+writable：当且仅当该属性的 writable 为 true 时，value 才能被赋值运算符改变。默认为 false。
+
+存取描述符
+
+get：一个给属性提供 getter 的方法，如果没有 getter 则为 undefined。当访问该属性时，该方法会被执行，方法执行时没有参数传入，但是会传入 this 对象（由于继承关系，这里的 this 并不一定是定义该属性的对象）。默认为 undefined。
+set：一个给属性提供 setter 的方法，如果没有 setter 则为 undefined。当属性值修改时，触发执行该方法。该方法将接受唯一参数，即该属性新的参数值。默认为 undefined。
+
+定义 descriptor 时，最好先把这些属性都定义清楚，防止被继承和继承时出错。
+
+```js
+function Archiver() {
+  var temperature = null;
+  var archive = [];
+  Object.defineProperty(this, "temperature", {
+    get: function () {
+      console.log("get!");
+      return temperature;
+    },
+    set: function (value) {
+      temperature = value;
+      archive.push({ val: temperature });
+    },
+  });
+  this.getArchive = function () {
+    return archive;
+  };
+}
+var arc = new Archiver();
+arc.temperature; // 'get!'
+arc.temperature = 11;
+arc.temperature = 13;
+arc.getArchive(); // [{ val: 11 }, { val: 13 }]
+```
+
+# 57.说说你对 Proxy 的理解
+
+官方定义：proxy 对象用于定义基本操作的自定义行为（如属性查找，赋值，枚举，函数调用等）。
+通俗来说是在对目标对象的操作之前提供了拦截，对外界的操作进行过滤和修改某些操作的默认行为，可以不直接操作对象本身，而是通过操作对象的代理对象来间接来操作对象。
+let proxy = new Proxy(target, handler)
+
+target 是用 Proxy 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）;
+handler 一个对象，其属性是当执行一个操作时定义代理的行为的函数，也就是自定义的行为。
+
+handle 可以为{}，但是不能为 null，否则会报错
+Proxy 目前提供了 13 种可代理操作，比较常用的
+
+    handler.get(target,property,receiver)获取值拦截
+    handler.set(target,property,value,receiver)设置值拦截
+    handler.has(target,prop)in 操作符拦截
+
+```js
+let obj = {
+  a: 1,
+  b: 2,
+};
+let test = new Proxy(obj, {
+  get: function (target, property) {
+    return property in target ? target[property] : 0;
+  },
+  set: function (target, property, value) {
+    target[property] = 6;
+  },
+  has: function (target, prop) {
+    if (prop == "b") {
+      target[prop] = 6;
+    }
+    return prop in target;
+  },
+});
+
+console.log(test.a); // 1
+console.log(test.c); // 0
+
+test.a = 3;
+console.log(test.a); // 6
+
+if ("b" in test) {
+  console.log(test); // Proxy {a: 6, b: 6}
+}
+```
+
+# 58.Object.defineProperty 和 Proxy 的区别
+
+    参考答案
+
+Object.defineProperty
+
+不能监听到数组 length 属性的变化；
+不能监听对象的添加；
+只能劫持对象的属性,因此我们需要对每个对象的每个属性进行遍历。
+
+Proxy
+
+可以监听数组 length 属性的变化；
+可以监听对象的添加；
+可代理整个对象，不需要对对象进行遍历，极大提高性能；
+多达 13 种的拦截远超 Object.defineProperty 只有 get 和 set 两种拦截。
+
+# 60.什么是双向绑定？原理是什么？
+
+双向绑定是指数据模型（Module）和视图（View）之间的双向绑定。
+其原理是采用数据劫持结合发布者-订阅者模式的方式来实现。
+Vue 中先遍历 data 选项中所有的属性（发布者）用 Object.defineProperty 劫持这些属性将其转为 getter/setter。读取数据时候会触发 getter。修改数据时会触发 setter。
+然后给每个属性对应 new Dep()，Dep 是专门收集依赖、删除依赖、向依赖发送消息的。先让每个依赖设置在 Dep.target 上，在 Dep 中创建一个依赖数组，先判断 Dep.target 是否已经在依赖中存在，不存在的话添加到依赖数组中完成依赖收集，随后将 Dep.target 置为上一个依赖。
+组件在挂载过程中都会 new 一个 Watcher 实例。这个实例就是依赖（订阅者）。Watcher 第二参数式一个函数，此函数作用是更新且渲染节点。在首次渲染过程，会自动调用 Dep 方法来收集依赖，收集完成后组件中每个数据都绑定上该依赖。当数据变化时就会在 seeter 中通知对应的依赖进行更新。在更新过程中要先读取数据，就会触发 Wacther 的第二个函数参数。一触发就再次再次自动调用 Dep 方法收集依赖，同时在此函数中运行 patch（diff 运算)来更新对应的 DOM 节点，完成了双向绑定。
+
+# 61.Vue 中如何实现一个虚拟 DOM？说说你的思路
+
+首先要构建一个 VNode 的类，DOM 元素上的所有属性在 VNode 类实例化出来的对象上都存在对应的属性。例如 tag 表示一个元素节点的名称，text 表示一个文本节点的文本，chlidren 表示子节点等。将 VNode 类实例化出来的对象进行分类，例如注释节点、文本节点、元素节点、组件节点、函数式节点、克隆节点。
+然后通过编译将模板转成渲染函数 render，执行渲染函数 render，在其中创建不同类型的 VNode 类，最后整合就可以得到一个虚拟 DOM（vnode）。
+最后通过 patch 将 vnode 和 oldVnode 进行比较后，生成真实 DOM。
+
+# 62.Vue 实例挂载的过程是什么？
+
+在初始化的最后，如果检测到选项有 el 属性，则调用 vm.$mount 方法挂载 vm，挂载的目标就是把模板渲染成最终的 DOM。
+
+第一步：确保 vm.$options 有 render 函数。
+
+因为在不同构建版本上的挂载过程都不一样，所以要对 Vue 原型上的$mount方法进行函数劫持。
+首先创建一个变量mount将Vue原型上的$mount 方法保存到这个变量上。然后 Vue 原型上的$mount方法被一个新的方法覆盖。在这个新方法中调用mount这个原始方法。
+通过el属性进行获取DOM元素。如果el是字符串，则使用document.querySelector获取DOM元素并赋值给el。如果获取不到，则创建一个空的div元素并赋值给el。如果el不是字符串，默认el是DOM元素，不进行处理。
+判断el是不是html元素或body元素，如果是则给出警告退出程序。
+因为挂载后续过程中需要render函数生成vnode，故要判断$options 选项中是否有 render 函数这个属性，如果有直接调用原始的$mount方法。
+如果没有，则判断template是否存在。若不存在则将el的outerHTML赋值给template。若存在，如果template是字符串且以#开头，通过选择符获取DOM元素获取innerHTML赋值给template，如果template已经是DOM元素类型直接获取innerHTML赋值给template。
+然后将template编译成代码字符串并将代码字符串转成render函数，并赋值到vm.$options 的 render 属性上。
+最后调用原始的$mount 方法。
+
+第二步：
+在原始的$mount 方法，先触发 beforeMount 钩子函数,然后创建一个 Watcher 实例，在第二参数传入一个函数 vm.\_update。
+
+该函数是首次渲染和更新渲染作用，参数为 render 函数（vnode），如果 vm.\_vnode 不存在则进行首次渲染。
+同时 vnode 中被劫持的数据自动收集依赖。当 vnode 中被劫持的数据变化时候触发对应的依赖，从而触发 vm.\_update 进行更新渲染。
+最后触发 mounted 钩子函数。
+
+# 63.Vue 为什么要求组件模板只能有一个根元素？
+
+当前的 virtualDOM 差异和 diff 算法在很大程度上依赖于每个子组件总是只有一个根元素。
+
+# 64.指令
+
+# 65.高阶组件
