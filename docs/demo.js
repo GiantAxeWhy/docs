@@ -79,3 +79,57 @@ console.log(cat.memow());
 Function.prototype.myCall()=function(context,){
 
 }
+
+
+//数据双向绑定
+var a =document.createElement('div')
+a.setAttribute("id","a")
+var b =document.createElement('div')
+b.setAttribute("id","b")
+document.body.appendChild(a)
+document.body.appendChild(b)
+var data = {
+  a:2,
+  b:3
+}
+class Dep{
+  constructor(){
+    this.callBacks = [];
+  }
+  depend(watch){
+    this.callBacks.push(watch)
+  }
+  notify(value){
+    this.callBacks.forEach(watch=>{
+      console.log('value',value)
+      watch.update(value)
+    })
+  }
+}
+
+class Watcher{
+    constructor(key){
+      this.dom = document.getElementById(key);
+  }
+  update(value){
+    this.dom.innerHTML = value
+  }
+}
+
+Object.keys(data).forEach(key=>{
+  var dep = new Dep()
+  Object.defineProperty(data,key,{
+    get:function(){
+      var watch = new Watcher(key)
+      dep.depend(watch)//收集依赖
+    },
+    set:function(nvalue){
+      dep.notify(nvalue)//变化了通知我
+    }
+  })
+})
+
+//调用
+data.a; //首先get上
+data.a = 123; //设置即可
+
