@@ -238,6 +238,88 @@ function deepClone(target, map = new WeakMap()) {
 }
 ```
 
+递归
+对象分类型讨论
+解决循环引用（环）
+
+```js
+class DeepClone {
+  constructor() {
+    this.cacheList = [];
+  }
+  clone(source) {
+    if (source instanceof Object) {
+      const cache = this.findCache(source);
+      if (cache) return cache;
+      // 如果找到缓存，直接返回
+      else {
+        let target;
+        if (source instanceof Array) {
+          target = new Array();
+        } else if (source instanceof Function) {
+          target = function () {
+            return source.apply(this, arguments);
+          };
+        } else if (source instanceof Date) {
+          target = new Date(source);
+        } else if (source instanceof RegExp) {
+          target = new RegExp(source.source, source.flags);
+        }
+        this.cacheList.push([source, target]); // 把源对象和新对象放进缓存列表
+        for (let key in source) {
+          if (source.hasOwnProperty(key)) {
+            // 不拷贝原型上的属性，太浪费内存
+            target[key] = this.clone(source[key]); // 递归克隆
+          }
+        }
+        return target;
+      }
+    }
+    return source;
+  }
+  findCache(source) {
+    for (let i = 0; i < this.cacheList.length; ++i) {
+      if (this.cacheList[i][0] === source) {
+        return this.cacheList[i][1]; // 如果有环，返回对应的新对象
+      }
+    }
+    return undefined;
+  }
+}
+```
+
+尤雨希版本
+
+```js
+function find(list, f) {
+  return list.filter(f)[0];
+}
+
+function deepCopy(obj, cache = []) {
+  // just return if obj is immutable value
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  // if obj is hit, it is in circular structure
+  const hit = find(cache, (c) => c.original === obj);
+  if (hit) {
+    return hit.copy;
+  }
+
+  const copy = Array.isArray(obj) ? [] : {};
+  // put the copy into cache at first
+  // because we want to refer it in recursive deepCopy
+  cache.push({
+    original: obj,
+    copy,
+  });
+  Object.keys(obj).forEach((key) => (copy[key] = deepCopy(obj[key], cache)));
+
+  return copy;
+}
+```
+
 # 事件总线（发布订阅）
 
 ```js
@@ -1630,90 +1712,6 @@ new Watcher(() => {
 setTimeout(() => {
   data.msg = "hello";
 }, 1000);
-```
-
-# 深拷贝
-
-递归
-对象分类型讨论
-解决循环引用（环）
-
-```js
-class DeepClone {
-  constructor() {
-    this.cacheList = [];
-  }
-  clone(source) {
-    if (source instanceof Object) {
-      const cache = this.findCache(source);
-      if (cache) return cache;
-      // 如果找到缓存，直接返回
-      else {
-        let target;
-        if (source instanceof Array) {
-          target = new Array();
-        } else if (source instanceof Function) {
-          target = function () {
-            return source.apply(this, arguments);
-          };
-        } else if (source instanceof Date) {
-          target = new Date(source);
-        } else if (source instanceof RegExp) {
-          target = new RegExp(source.source, source.flags);
-        }
-        this.cacheList.push([source, target]); // 把源对象和新对象放进缓存列表
-        for (let key in source) {
-          if (source.hasOwnProperty(key)) {
-            // 不拷贝原型上的属性，太浪费内存
-            target[key] = this.clone(source[key]); // 递归克隆
-          }
-        }
-        return target;
-      }
-    }
-    return source;
-  }
-  findCache(source) {
-    for (let i = 0; i < this.cacheList.length; ++i) {
-      if (this.cacheList[i][0] === source) {
-        return this.cacheList[i][1]; // 如果有环，返回对应的新对象
-      }
-    }
-    return undefined;
-  }
-}
-```
-
-尤雨希版本
-
-```js
-function find(list, f) {
-  return list.filter(f)[0];
-}
-
-function deepCopy(obj, cache = []) {
-  // just return if obj is immutable value
-  if (obj === null || typeof obj !== "object") {
-    return obj;
-  }
-
-  // if obj is hit, it is in circular structure
-  const hit = find(cache, (c) => c.original === obj);
-  if (hit) {
-    return hit.copy;
-  }
-
-  const copy = Array.isArray(obj) ? [] : {};
-  // put the copy into cache at first
-  // because we want to refer it in recursive deepCopy
-  cache.push({
-    original: obj,
-    copy,
-  });
-  Object.keys(obj).forEach((key) => (copy[key] = deepCopy(obj[key], cache)));
-
-  return copy;
-}
 ```
 
 # const
