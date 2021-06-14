@@ -132,6 +132,15 @@ function unique(arr) {
   });
   return res;
 }
+
+const testArr = [1, 2, 2, 3, 4, 4, 5, 5, 5, 6, 7];
+testArr.reduce((acc, cur) => {
+  if (!acc.includes(cur)) {
+    acc.push(cur);
+  }
+  return acc;
+}, []);
+// [1, 2, 3, 4, 5, 6, 7]
 ```
 
 es6
@@ -1909,6 +1918,81 @@ const data = produce(state, (draftState) => {
 
 console.log(data, state);
 console.log(data.data === state.data);
+```
+
+# 二维数组转化为一维
+
+```js
+const testArr = [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+];
+testArr.reduce((acc, cur) => {
+  return acc.concat(cur);
+}, []);
+// [1,2,3,4,5,6]
+```
+
+# 计算每个元素出现的次数
+
+```js
+const testArr = [1, 3, 4, 1, 3, 2, 9, 8, 5, 3, 2, 0, 12, 10];
+testArr.reduce((acc, cur) => {
+  if (!(cur in acc)) {
+    acc[cur] = 1;
+  } else {
+    acc[cur] += 1;
+  }
+  return acc;
+}, {});
+
+// {0: 1, 1: 2, 2: 2, 3: 3, 4: 1, 5: 1, 8: 1, 9: 1, 10: 1, 12: 1}
+```
+
+这里注意，我初始化的值变成了 {} ,这个需求需要键值对的形式，利用 cur in acc  判断累计器 acc  中是否含有 cur  属性，如果没有默认赋值 1，如果已经存在 += 1  累加一次。
+在实际的开发业务中，这个方法非常常用，变种也很多。比如给你一个账单列表（项与项之间的消费类型有相同情况），让你统计账单列表中各个消费类型的支出情况，如 购物  、 学习  、 转账   等消费类型的支出情况。这就用到了上述方法，去通过归类。
+
+# 按属性给数组分类
+
+什么叫按照属性给数组分类，其实就是给定一个依据，把符合条件的归并到一起。再拿账单举例，就是按各个消费类型归为一类。
+
+```js
+const bills = [
+  { type: "shop", momey: 223 },
+  { type: "study", momey: 341 },
+  { type: "shop", momey: 821 },
+  { type: "transfer", momey: 821 },
+  { type: "study", momey: 821 },
+];
+bills.reduce((acc, cur) => {
+  // 如果不存在这个键，则设置它赋值 [] 空数组
+  if (!acc[cur.type]) {
+    acc[cur.type] = [];
+  }
+  acc[cur.type].push(cur);
+  return acc;
+}, {});
+```
+
+# 求最大值最小值
+
+第一次没有对比直接 acc 赋值 cur ，后面进入对比判断，如果 acc 的 age 属性小于 cur 的 age 属性，重制 acc 。相等的话默认返回 acc 。
+
+```js
+const testArr = [{ age: 20 }, { age: 21 }, { age: 22 }];
+testArr.reduce((acc, cur) => {
+  if (!acc) {
+    acc = cur;
+    return acc;
+  }
+  if (acc.age < cur.age) {
+    acc = cur;
+    return acc;
+  }
+  return acc;
+}, 0);
+// {age: 22}
 ```
 
 # const

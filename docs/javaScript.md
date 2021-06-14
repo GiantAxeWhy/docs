@@ -1456,6 +1456,7 @@ WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。但�
 
 map
 map 方法接收一个回调函数，函数内接收三个参数，当前项、索引、原数组，返回一个新的数组，并且数组长度不变。 知道了这些特征之后，我们用 reduce 重塑 map 。
+map 方法会给原数组中的每个元素都按顺序调用一次 callback 函数。callback 每次执行后的返回值（包括 undefined）组合起来形成一个新数组。 callback 函数只会在有值的索引上被调用；那些从来没被赋过值或者使用 delete 删除的索引则不会被调用。让数组通过某种计算产生一个新数组,影射成一个新的数组,
 
 ```js
 function map(arr, mapcallback) {
@@ -1505,6 +1506,8 @@ testArr.reduceForEach((item, index, array) => {
 // 0123
 ```
 
+forEach 方法对数组的每个元素执行一次提供的 CALLBACK 函数,forEach 是一个数组方法，可以用来把一个函数套用在一个数组中的每个元素上，forEach 为每个数组元素执行 callback 函数只可用于数组.遍历一个数组让数组每个元素做一件事情.那些已删除（使用 delete 方法等情况）或者未初始化的项将被跳过（但不包括那些值为 undefined 的项）（例如在稀疏数组上)；不像 map() 或者 reduce() ，它总是返回 undefined 值，并且不可链式调用。典型用例是在一个链的最后执行副作用。
+
 find
 find 方法中 callback 同样也是返回 Boolean 类型，返回你要找的第一个符合要求的项。
 
@@ -1534,6 +1537,7 @@ testObj.reduceFind((item) => item.a % 9 == 0); // undefined
 
 filter
 filter 同样接收一个回调函数，回调函数返回 true 则返回当前项，反之则不返回。回调函数接收的参数同 forEach 。
+filter 为数组中的每个元素调用一次 callback 函数，并利用所有使得 callback 返回 true 或 等价于 true 的值 的元素创建一个新数组。callback 只会在已经赋值的索引上被调用，对于那些已经被删除或者从未被赋值的索引不会被调用。那些没有通过 callback 测试的元素会被跳过，不会被包含在新数组中。筛选出过滤出数组中符合条件的项,组成新数组.
 
 ```js
 function filter(arr, filterCallback) {
@@ -1572,6 +1576,52 @@ Array.prototype.reduceFilter = function (callback) {
 testArr.reduceFilter((item) => item % 2 == 0); // 过滤出偶数项。
 // [2, 4]
 ```
+
+## for-in
+
+一般会使用 for-in 来遍历对象的属性的,不过属性需要 enumerable,才能被读取到.
+for-in 循环只遍历可枚举属性。一般常用来遍历对象，包括非整数类型的名称和继承的那些原型链上面的属性也能被遍历。像 Array 和 Object 使用内置构造函数所创建的对象都会继承自 Object.prototype 和 String.prototype 的不可枚举属性就不能遍历了.
+
+## for-of 语句 (ES 6)
+
+for-of 语句在可迭代对象（包括 Array，Map，Set，String，TypedArray，arguments 对象等等）上创建一个迭代循环，调用自定义迭代钩子，并为每个不同属性的值执行语句。只要是一个 iterable 的对象,就可以通过 for-of 来迭代.
+for-of 和 for-in 的区别
+for-in 语句以原始插入顺序迭代对象的可枚举属性。for-in 会把继承链的对象属性都会遍历一遍,所以会更花时间.
+
+## every
+
+方法为数组中的每个元素执行一次 callback 函数，直到它找到一个使 callback 返回 false（表示可转换为布尔值 false 的值）的元素。如果发现了一个这样的元素，every 方法将会立即返回 false。否则，callback 为每一个元素返回 true，every 就会返回 true。检测数组中的每一项是否符合条件,如果每一项都符合条件,就会返回 true,否则返回 false,有点像遍历数组且操作 callback。只会为那些已经被赋值的索引调用。不会为那些被删除或从来没被赋值的索引调用。
+
+## some 方法
+
+some 为数组中的每一个元素执行一次 callback 函数，直到找到一个使得 callback 返回一个“真值”（即可转换为布尔值 true 的值）。如果找到了这样一个值，some 将会立即返回 true。否则，some 返回 false。callback 只会在那些”有值“的索引上被调用，不会在那些被删除或从来未被赋值的索引上调用。检查数组中是否有某些项符号条件,如果有一项就返回 true,否则返回 false,有点像遍历数组或者操作.
+
+## reduce  接收 2 个参数：
+
+第一个参数是回调函数（必选），第二个参数是初始值 initialValue（可选） 。
+而第一个参数（回调函数），接收下面四个参数：
+
+    Accumulator (acc) (累计器)
+    Current Value (cur) (当前值)
+    Current Index (idx) (当前索引)
+    Source Array (src) (源数组)
+
+```js
+[1, 2, 3, 4].reduce((acc, cur) => {
+  return acc + cur;
+}, 10);
+// 10 + 1 + 2 + 3 + 4
+// 20
+
+[1, 2, 3, 4].reduce((acc, cur) => {
+  return acc + cur;
+});
+// 1 + 2 + 3 + 4
+// 10
+```
+
+遍历速度
+for > for-of > forEach > filter > map > for-in
 
 # 33 .深浅拷贝
 
