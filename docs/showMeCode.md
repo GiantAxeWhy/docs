@@ -170,6 +170,24 @@ function flatten(arr) {
 }
 ```
 
+统计数组有几层
+
+```js
+var arr = [1, 2, 3, [1, 5, 6, [7, 9, [11, 32]]], 10];
+var a = 1;
+function multiarr(arr) {
+  for (i = 0; i < arr.length; i++) {
+    if (arr[i] instanceof Array) {
+      a++;
+      arr = arr[i];
+      multiarr(arr);
+    }
+  }
+  return a;
+}
+console.log(multiarr(arr));
+```
+
 # 深浅拷贝
 
 浅拷贝：只考虑对象类型。
@@ -1923,5 +1941,945 @@ console.log(data.data === state.data);
         }
       }
       a = 20 // 报错
+
+```
+
+# 数据双向绑定
+
+```js
+var a = document.createElement("div");
+a.setAttribute("id", "a");
+var b = document.createElement("div");
+b.setAttribute("id", "b");
+document.body.appendChild(a);
+document.body.appendChild(b);
+var data = {
+  a: 2,
+  b: 3,
+};
+class Dep {
+  constructor() {
+    this.callBacks = [];
+  }
+  depend(watch) {
+    this.callBacks.push(watch);
+  }
+  notify(value) {
+    this.callBacks.forEach((watch) => {
+      console.log("value", value);
+      watch.update(value);
+    });
+  }
+}
+
+class Watcher {
+  constructor(key) {
+    this.dom = document.getElementById(key);
+  }
+  update(value) {
+    this.dom.innerHTML = value;
+  }
+}
+
+Object.keys(data).forEach((key) => {
+  var dep = new Dep();
+  Object.defineProperty(data, key, {
+    get: function () {
+      var watch = new Watcher(key);
+      dep.depend(watch); //收集依赖
+    },
+    set: function (nvalue) {
+      dep.notify(nvalue); //变化了通知我
+    },
+  });
+});
+
+//调用
+data.a; //首先get上
+data.a = 123; //设置即可
+```
+
+# 斐波那契
+
+```js
+function fibo2(n) {
+  if (n <= 0) return -1;
+  if (n == 1) return 0;
+  if (n == 2) return 1;
+  return fibo2(n - 1) + fibo2(n - 2);
+}
+console.log(fibo2(7));
+//变态青蛙跳
+function jump(n) {
+  if (n <= 0) return -1;
+  if (n == 1) return 1;
+  if (n == 2) return 2;
+  var result = 0;
+  for (var i = 1; i < n; i++) {
+    result += jump(n - i);
+  }
+  return result + 1; // +1代表从0级台阶直接跳上去的情况
+}
+/*
+ * 1,1,1,1,
+ * 1,1,2
+ * 1,2,1,
+ * 2,1,1,
+ * 1,3,
+ * 3,1,
+ * 2,2,
+ * 4
+ * */
+console.log(jump(4));
+```
+
+# 二叉树深度广度 diff
+
+```js
+//构造二叉树
+function Node(value) {
+  this.value = value;
+  this.left = null;
+  this.right = null;
+}
+var a = new Node("a");
+var b = new Node("b");
+var c = new Node("c");
+var d = new Node("d");
+var e = new Node("e");
+var f = new Node("f");
+var g = new Node("g");
+a.left = c;
+a.right = b;
+c.left = f;
+c.right = g;
+b.left = d;
+b.right = e;
+//二叉树深度优先算法
+//对于二叉树来说，深度优先搜索，和前序遍历的顺序是一样的。
+function deepSearch(root, target) {
+  if (root == null) return false;
+  if (root.value == target) return true;
+  var left = deepSearch(root.left, target);
+  var right = deepSearch(root.right, target);
+  return left || right;
+}
+
+console.log(deepSearch(a, "n"));
+//广度优先
+function f1(rootList, target) {
+  if (rootList == null || rootList.length == 0) return false;
+  var childList = []; //当前层所有节点的子节点，都在这个list中，这样传入下一层级的时候，就可以遍历整个层级的节点。
+  for (var i = 0; i < rootList.length; i++) {
+    if (rootList[i] != null && rootList[i].value == target) {
+      return true;
+    } else {
+      childList.push(rootList[i].left);
+      childList.push(rootList[i].right);
+    }
+  }
+  return f1(childList, target);
+}
+console.log(f1([a], "e"));
+//二叉树的diff算法
+//新增了什么，修改了什么，删除了什么
+
+// {type: "新增", origin: null, now: c2},
+// {type: "修改", origin: c1, now: c2},
+// {type: "删除", origin: c2, now: null }
+// var diffList = [];
+function diffTree(root1, root2, diffList) {
+  if (root1 == root2) return diffList;
+  if (root1 == null && root2 != null) {
+    // 新增了节点
+    diffList.push({ type: "新增", origin: null, now: root2 });
+  } else if (root1 != null && root2 == null) {
+    // 删除了节点
+    diffList.push({ type: "删除", origin: root1, now: null });
+  } else if (root1.value != root2.value) {
+    //相同位置的节点值不同了，修改了节点
+    diffList.push({ type: "修改", origin: root1, now: root2 });
+    diffTree(root1.left, root2.left, diffList);
+    diffTree(root1.right, root2.right, diffList);
+  } else {
+    diffTree(root1.left, root2.left, diffList);
+    diffTree(root1.right, root2.right, diffList);
+  }
+}
+var diffList = [];
+diffTree(a1, a2, diffList);
+console.log(diffList);
+
+//反转二叉树
+var invertTree = function (root) {
+  if (root !== null) {
+    var temp = root.left;
+    root.left = root.right;
+    root.right = temp;
+    invertTree(root.left);
+    invertTree(root.right);
+  }
+  return root;
+};
+```
+
+# 二叉树前序中序后序 以及还原二叉树
+
+```js
+//二叉树的前序
+function Node(value) {
+  this.value = value;
+  this.left = null;
+  this.right = null;
+}
+var a = new Node("a");
+var b = new Node("b");
+var c = new Node("c");
+var d = new Node("d");
+var e = new Node("e");
+var f = new Node("f");
+var g = new Node("g");
+a.left = c;
+a.right = b;
+c.left = f;
+c.right = g;
+b.left = d;
+b.right = e;
+function f1(root) {
+  if (root == null) return;
+  console.log(root.value);
+  f1(root.left);
+  f1(root.right);
+}
+f1(a);
+
+//中序
+function f1(root) {
+  if (root == null) return;
+  f1(root.left);
+  console.log(root.value);
+  f1(root.right);
+}
+f1(a);
+//后序
+function f1(root) {
+  if (root == null) return;
+  f1(root.left);
+  f1(root.right);
+  console.log(root.value);
+}
+
+f1(a);
+
+//前序中序还原二叉树
+var qian = ["a", "c", "f", "g", "b", "d", "e"];
+var zhong = ["f", "c", "g", "a", "d", "b", "e"];
+function Node(value) {
+  this.value = value;
+  this.left = null;
+  this.right = null;
+}
+function f1(qian, zhong) {
+  if (
+    qian == null ||
+    zhong == null ||
+    qian.length == 0 ||
+    zhong.length == 0 ||
+    qian.length != zhong.length
+  )
+    return null;
+  var root = new Node(qian[0]);
+  var index = zhong.indexOf(root.value); //找到根节点在中序遍历中的位置
+  var qianLeft = qian.slice(1, 1 + index); //前序遍历的左子树
+  var qianRight = qian.slice(1 + index, qian.length); //前序遍历的右子树
+  var zhongLeft = zhong.slice(0, index); //中序遍历的左子树
+  var zhongRight = zhong.slice(index + 1, zhong.length); //中序遍历的右子树
+  root.left = f1(qianLeft, zhongLeft); //根据左子树的前序和中序还原左子树并赋值给root.left
+  root.right = f1(qianRight, zhongRight); //根绝右子树的前序和中序还原右子树并赋值给root.right
+  return root;
+}
+var root = f1(qian, zhong);
+console.log(root.left);
+console.log(root.right);
+//中序后序
+var zhong = ["f", "c", "g", "a", "d", "b", "e"];
+var hou = ["f", "g", "c", "d", "e", "b", "a"];
+function Node(value) {
+  this.value = value;
+  this.left = null;
+  this.right = null;
+}
+function f1(zhong, hou) {
+  if (
+    zhong == null ||
+    hou == null ||
+    zhong.length == 0 ||
+    hou.length == 0 ||
+    zhong.length != hou.length
+  )
+    return null;
+  var root = new Node(hou[hou.length - 1]);
+  var index = zhong.indexOf(root.value);
+  var leftZhong = zhong.slice(0, index);
+  var rightZhong = zhong.slice(index + 1, zhong.length);
+  var leftHou = hou.slice(0, index);
+  var rightHou = hou.slice(index, hou.length - 1);
+  root.left = f1(leftZhong, leftHou);
+  root.right = f1(rightZhong, rightHou);
+  return root;
+}
+var root = f1(zhong, hou);
+console.log(root.left);
+console.log(root.right);
+```
+
+## 1. 求二叉树中的节点个数
+
+```js
+public static int getNodeNumRec(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        return getNodeNumRec(root.left) + getNodeNumRec(root.right) + 1;
+}
+
+```
+
+## 2. 求二叉树的最大层数(最大深度)
+
+```js
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if(root == null)
+            return 0;
+        return Math.max(maxDepth(root.left), maxDepth(root.right))+1;
+    }
+}
+
+```
+
+# 2.1 二叉树的最小深度
+
+```js
+class Solution {
+    public int minDepth(TreeNode root) {
+        if(root == null)
+            return 0;
+        int left = minDepth(root.left);
+        int right = minDepth(root.right);
+        return (left == 0 || right == 0) ? left + right + 1 : Math.min(left, right) + 1;
+    }
+}
+
+```
+
+## 求二叉树第 K 层的节点个数
+
+```js
+void get_k_level_number(TreeNode root, int k){
+    if(root == null || k <=0){
+        return 0;
+    }
+    if(root != null && k == 1){
+        return 1;
+    }
+    return get_k_level_number(root.left, k-1) + get_k_level_number(root.right, k-1);
+}
+
+```
+
+## 求二叉树第 K 层的叶子节点个数
+
+```js
+void get_k_level_leaf_number(TreeNode root, int k){
+    if(root == null || k <=0){
+        return 0;
+    }
+    if(root != null && k == 1){
+        if(root.left == null && root.right == null)
+            return 1;
+        else
+            return 0;
+    }
+    return get_k_level_number(root.left, k-1) + get_k_level_number(root.right, k-1);
+}
+
+```
+
+## 判断二叉树是不是平衡二叉树
+
+```js
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        if(root == null)
+            return true;
+        return Math.abs(maxHigh(root.left) - maxHigh(root.right)) <= 1
+            && isBalanced(root.left) && isBalanced(root.right);
+    }
+
+    public int maxHigh(TreeNode root){
+        if(root == null)
+            return 0;
+        return Math.max(maxHigh(root.left), maxHigh(root.right))+1;
+    }
+}
+
+```
+
+## 求二叉树的镜像
+
+```js
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if(root == null)
+            return root;
+
+        TreeNode node = root.left;
+        root.left = invertTree(root.right);
+        root.right = invertTree(node);
+
+        return root;
+    }
+}
+
+```
+
+## 对称二叉树
+
+```js
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return root == null || isSymmetricHelper(root.left, root.right);
+    }
+    public boolean isSymmetricHelper(TreeNode left, TreeNode right){
+        if(left == null && right == null)
+            return true;
+        if(left == null || right == null)
+            return false;
+        if(left.val != right.val)
+            return false;
+        return isSymmetricHelper(left.left, right.right) && isSymmetricHelper(left.right, right.left);
+    }
+}
+
+```
+
+# 各种排序
+
+```js
+//冒泡排序
+	var arr = [4,1,6,9,3,2,8,7];
+	function compare(a,b){
+	    if(b<a)return true;
+	    else return false
+	}
+	function change(arr,a,b){
+	    let temp = arr[a];
+	    arr[a] = arr[b];
+	     arr[b] = temp
+	}
+	function sort(arr){
+	    for(let i = 0 ; i<arr.length;i++){
+	          for(let j = 0 ; j<arr.length -1 ;j++){
+	                if(compare(arr[j],arr[j+1])){
+	                    change(arr,j,j+1)
+	                }
+	            }
+	    }
+	}
+	sort(arr);
+	console.log(arr);
+	//选择排序
+	//选择排序，内层循环，每一圈选出一个最大的，然后放在后面
+	    var arr = [4,1,6,9,3,2,8,7];
+	    function compare(arr,a,b){
+	        if(a<b)return true;
+	        else return false
+	    }
+	    function change(arr,a,b){
+	        let temp = arr[a];
+	        arr[a]= arr[b];
+	        arr[b] = temp;
+	    }
+	    function sort(arr){
+	        for(let i = 0 ; i<arr.length;i++){
+	                let maxIndex  =0;
+	               for(let j = 0 ;j<arr.length-i-1;j++){
+	                        if(compare(arr,arr[i],arr[j])){
+	                            maxIndex = j
+	                        }
+	                    }
+	                    change(arr,maxIndex,arr.length - 1 - i)
+	        }   }
+	//快速排序
+var arr = [4,1,6,9,3,2,8,7];
+Function quickSort(arr){
+Let left=[],right=[],index=Math.floor(arr.length/2),
+Pivox = arr.splice(index,1)[0];
+for(let I = 0 ; i<arr.length;i++){
+if(pivox>arr[i]){
+Left.push(arr[i])
+}else{
+Right.push(arr[i])
+}
+}
+Return quickSort(left).concat([pivox],quickSort(right))
+}
+
+
+
+//插入排序
+function insertion(array) {
+  if (!checkArray(array)) return
+  for (let i = 1; i < array.length; i++) {
+    for (let j = i - 1; j >= 0 && array[j] > array[j + 1]; j--)
+      swap(array, j, j + 1);
+  }
+  return array;
+	}
+//选择排序
+function selection(array) {
+  if (!checkArray(array)) return
+  for (let i = 0; i < array.length - 1; i++) {
+    let minIndex = i;
+    for (let j = i + 1; j < array.length; j++) {
+      minIndex = array[j] < array[minIndex] ? j : minIndex;
+    }
+    swap(array, i, minIndex);
+  } return array;}
+
+
+//数组中第k大元素
+
+let findKthLargest = function(nums, k) {
+    nums.sort((a, b) => b - a).slice(0, k);
+    return nums[k-1]
+ }
+```
+
+# 链表
+
+# 链表中倒数第 k 个节点;
+
+```js
+var getKthFromEnd = function (head, k) {
+  //双指针
+  var p = head,
+    q = head;
+  while (p) {
+    if (k > 0) {
+      p = p.next; //p先走k步，保证p、q之间相差k步
+      k--;
+    } else {
+      p = p.next; //当p走到结尾时，此时的q就是倒数的第k个
+      q = q.next;
+    }
+  }
+  return q;
+};
+```
+
+# 逆置;
+
+```js
+function nizhi() {
+  if (root.next.next === null) {
+    root.next.next = root;
+    return root.next;
+  } else {
+    let result = nizhi(root.next);
+    root.next.next = root;
+    root.next = null;
+    return result;
+  }
+}
+var nextRoot = nizhi(node1);
+function blan(root) {
+  if (root === null) return;
+  blan(root.next);
+}
+blan(nextRoot);
+```
+
+# //实现单链表
+
+```js
+class ListNode {
+  constructor(val) {
+    this.val = val;
+    this.next = null;
+  }
+}
+//单链表插入、删除、查找
+class LinkedList {
+  constructor(val) {
+    val = val === undefined ? "head" : val;
+    this.head = new ListNode(val);
+  }
+
+  // 找val值节点，没有找到返回-1
+  findByVal(val) {
+    let current = this.head;
+    while (current !== null && current.val !== val) {
+      current = current.next;
+    }
+    return current ? current : -1;
+  }
+
+  // 插入节点,在值为val后面插入
+  insert(newVal, val) {
+    let current = this.findByVal(val);
+    if (current === -1) return false;
+    let newNode = new ListNode(newVal);
+    newNode.next = current.next;
+    current.next = newNode;
+  }
+
+  // 获取值为nodeVal的前一个节点,找不到为-1,参数是val
+  // 适用于链表中无重复节点
+  findNodePreByVal(nodeVal) {
+    let current = this.head;
+    while (current.next !== null && current.next.val !== nodeVal)
+      current = current.next;
+    return current !== null ? current : -1;
+  }
+
+  // 根据index查找当前节点, 参数为index
+  // 可以作为比较链表是否有重复节点
+
+  findByIndex(index) {
+    let current = this.head,
+      pos = 1;
+    while (current.next !== null && pos !== index) {
+      current = current.next;
+      pos++;
+    }
+
+    return current && pos === index ? current : -1;
+  }
+
+  // 删除某一个节点,删除失败放回false
+  remove(nodeVal) {
+    if (nodeVal === "head") return false;
+    let needRemoveNode = this.findByVal(nodeVal);
+    if (needRemoveNode === -1) return false;
+    let preveNode = this.findNodePreByVal(nodeVal);
+
+    preveNode.next = needRemoveNode.next;
+  }
+
+  //遍历节点
+
+  disPlay() {
+    let res = new Array();
+    let current = this.head;
+    while (current !== null) {
+      res.push(current.val);
+      current = current.next;
+    }
+    return res;
+  }
+
+  // 在链表末尾插入一个新的节点
+  push(nodeVal) {
+    let current = this.head;
+    let node = new ListNode(nodeVal);
+    while (current.next !== null) current = current.next;
+    current.next = node;
+  }
+  // 在头部插入
+  frontPush(nodeVal) {
+    let newNode = new ListNode(nodeVal);
+    this.insert(nodeVal, "head");
+  }
+}
+```
+
+# //合并两个有序链表
+
+/_ 模拟题+链表
+思路当然简单，重要的是模拟过程，在算法程度上，这种题目可以较为模拟题，模拟你思考的过程，每次比较两个 l1.val 与 l2.val 的大小，取小的值，同时更新小的值指向下一个节点
+主要注意的就是循环终止的条件：当两者其中有一个为空时，即指向 null
+最后需要判断两个链表哪个非空，在将非空的链表与 tmp 哨兵节点连接就好。 _/
+
+```js
+var mergeTwoLists = function (l1, l2) {
+  let newNode = new ListNode("start"), // 做题套路,头节点
+    tmp = newNode; // tmp作为哨兵节点
+  while (l1 && l2) {
+    // 循环结束的条件就是两者都要为非null
+    if (l1.val >= l2.val) {
+      tmp.next = l2;
+      l2 = l2.next;
+    } else {
+      tmp.next = l1;
+      l1 = l1.next;
+    }
+    tmp = tmp.next; // 哨兵节点更新指向下一个节点
+  }
+  // 最后需要判断哪个链表还存在非null
+  tmp.next = l1 == null ? l2 : l1;
+  return newNode.next;
+};
+/* 递归思路: 「递归解法要注意递归主题里每次返回值较小得节点，这样才能保证我们最后得到得是链表得最小开头」 */
+```
+
+# //链表区间反转
+
+```js
+var reverseBetween = function (head, m, n) {
+  let count = n - m,
+    newNode = new ListNode("head");
+  tmp = newNode;
+  tmp.next = head; // 哨兵节点,这样子同时也保证了newNode下一个节点就是head
+  for (let i = 0; i < m - 1; i++) {
+    tmp = tmp.next;
+  }
+  // 此时循环后,tmp保留的就是反转区间前一个节点,需要用front保留下来
+  let front, prev, curr, tail;
+  front = tmp; // 保留的是区间首节点
+  // 同时tail指针的作用是将反转后的链接到最后节点
+
+  prev = tail = tmp.next; // 保留反转后的队尾节点 也就是tail
+  curr = prev.next;
+  for (let i = 0; i < count; i++) {
+    let next = curr.next;
+    curr.next = prev;
+    prev = curr;
+    curr = next;
+  }
+  // 将原本区间首节点链接到后结点
+  tail.next = curr;
+  // font是区间前面一个节点,需要链接的就是区间反转的最后一个节点
+  front.next = prev;
+
+  return newNode.next; // 最后返回newNode.next就行,一开始我们指向了head节点
+};
+```
+
+# //交换链表中的节点
+
+```js
+var swapPairs = function (head) {
+  let newNode = new ListNode("start");
+  (newNode.next = head), // 链表头节点套路操作
+    (tmp = newNode); // tmp哨兵节点,这里要从newNode节点开始,并不是从head开始的
+
+  while (tmp.next !== null && tmp.next.next !== null) {
+    let start = tmp.next,
+      end = start.next;
+    tmp.next = end;
+    start.next = end.next;
+    end.next = start;
+    tmp = start;
+  }
+
+  return newNode.next; // 返回的自然就是指向 链表头节点的next指针
+};
+```
+
+# //链表相交
+
+```js
+var getIntersectionNode = function (headA, headB) {
+  let p1 = headA,
+    p2 = headB;
+  while (p1 != p2) {
+    p1 = p1 === null ? headB : p1.next;
+    p2 = p2 === null ? headA : p2.next;
+  }
+  return p1;
+};
+```
+
+# //链表中间元素
+
+```js
+    public Node getMid(Node head){
+      if(head == null){
+         return null;
+      }
+
+      Node slow = head;
+      Node fast = head;
+
+      // fast.next = null 表示 fast 是链表的尾节点
+      while(fast != null && fast.next != null){
+         fast = fast.next.next;
+         slow = slow.next;
+      }
+      return slow;
+    }
+```
+
+# //循环链表
+
+```js
+private static boolean isLoopList(Node head){
+
+        if (head == null){
+            return false;
+        }
+
+
+        Node slow = head;
+        Node fast = head.next;
+
+        //如果不是循环链表那么一定有尾部节点 此节点 node.next = null
+        while(slow != null && fast != null && fast.next != null){
+            if (fast == slow || fast.next == slow){
+                return true;
+            }
+            // fast 每次走两步  slow 每次走一步
+            fast =fast.next.next;
+            slow = slow.next;
+        }
+        //如果不是循环链表返回 false
+        return false;
+    }
+```
+
+# //删除有序链表中的重复元素
+
+```js
+ private void delSortSame(Node head) {
+        if (head == null || head.next == null) {
+            return;
+        }
+
+        Node dummy = head;
+        while (dummy.next != null) {
+            if (dummy.value == dummy.next.value) {
+                dummy.next = dummy.next.next;
+            } else {
+                dummy = dummy.next;
+            }
+        }
+    }
+
+```
+
+# //k 个为一组逆序
+
+```js
+/* 给定一个单链表的头节点 head,实现一个调整单链表的函数，使得每K个节点之间为一组进行逆序，并且从链表的尾部开始组起，头部剩余节点数量不够一组的不需要逆序。（不能使用队列或者栈作为辅助） */
+
+
+    public ListNode reverseKGroup(ListNode head, int k) {
+        ListNode temp = head;
+        for (int i = 1; i < k && temp != null; i++) {
+            temp = temp.next;
+        }
+        //判断节点的数量是否能够凑成一组
+        if(temp == null)
+            return head;
+
+        ListNode t2 = temp.next;
+        temp.next = null;
+        //把当前的组进行逆序
+        ListNode newHead = reverseList(head);
+        //把之后的节点进行分组逆序
+        ListNode newTemp = reverseKGroup(t2, k);
+        // 把两部分连接起来
+        head.next = newTemp;
+
+        return newHead;
+    }
+```
+
+# //逆序单链表
+
+```js
+   private static ListNode reverseList(ListNode head) {
+       if(head == null || head.next == null)
+           return head;
+       ListNode result = reverseList(head.next);
+       head.next.next = head;
+       head.next = null;
+       return result;
+   }
+public ListNode solve(ListNode head, int k) {
+   // 调用逆序函数
+   head = reverse(head);
+   // 调用每 k 个为一组的逆序函数（从头部开始组起）
+   head = reverseKGroup(head, k);
+   // 在逆序一次
+   head = reverse(head);
+   return head;
+
+}
+```
+
+# //链表求和
+
+```js
+private Node addLists(Node head1, Node head2) {
+        head1 = reverseList(head1);
+        head2 = reverseList(head2);
+        //进位标识
+        int ca = 0;
+        int n1 = 0;
+        int n2 = 0;
+        int sum = 0;
+
+        Node addHead = new Node(0);
+        Node dummyHead = addHead;
+
+        Node cur1 = head1;
+        Node cur2 = head2;
+
+        while (cur1 != null || cur2 != null) {
+            n1 = cur1 == null ? 0 : cur1.value;
+            n2 = cur2 == null ? 0 : cur2.value;
+
+            sum = n1 + n2 + ca;
+
+            Node node = new Node(sum % 10);
+            System.out.println( sum % 10);
+            ca = sum / 10;
+
+            dummyHead.next = node;
+
+            dummyHead = dummyHead.next;
+
+            cur1 = cur1 == null ? null : cur1.next;
+            cur2 = cur2 == null ? null : cur2.next;
+        }
+
+        if (ca > 0) {
+            dummyHead.next = new Node(ca);
+        }
+
+        head1 = reverseList(head1);
+        head2 = reverseList(head2);
+
+        addHead = addHead.next;
+        return reverseList(addHead);
+    }
+
+    private  Node reverseList(Node head) {
+        Node cur = head;
+        Node pre = null;
+        Node next = null;
+
+        while (cur != null) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        //注意这里返回的是赋值当前比较元素
+        return pre;
+    }
+
 
 ```
