@@ -2030,6 +2030,8 @@ testArr.reduce((acc, cur) => {
 
 # 数据双向绑定
 
+      这里初始化的顺序依次是 prop>methods>data>computed>watch
+
 ```js
 var a = document.createElement("div");
 a.setAttribute("id", "a");
