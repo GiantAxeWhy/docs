@@ -25,6 +25,14 @@ http://81.70.248.176:12306/
       > 5、列表显示数据为 visibleData = listData.slice(startIndex,endIndex)
       > 当滚动后，由于渲染区域相对于可视区域已经发生了偏移，此时我需要获取一个偏移量 startOffset，通过样式控制将渲染区域偏移至可视区域中。 偏移量 startOffset = scrollTop - (scrollTop % itemSize);
       > 扩展 当需要渲染的 item 高度不固定时
+      以预估高度先行渲染，然后获取真实高度并缓存。
+
+      定义组件属性 estimatedItemSize,用于接收预估高度
+      并在初始时根据 estimatedItemSize 对 positions 进行初始化。
+
+      由于列表项高度不定，并且我们维护了 positions，用于记录每一项的位置，而列表高度实际就等于列表中最后一项的底部距离列表顶部的位置。
+      由于需要在渲染完成后，获取列表每项的位置信息并缓存，所以使用钩子函数 updated 来实现：
+      滚动后获取列表开始索引的方法修改为通过缓存获取：
 
 数组：连续
 连续空间存储是数组的特点，下图是数组在内存中的存储示意图。
