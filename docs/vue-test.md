@@ -1492,8 +1492,6 @@ if ("b" in test) {
 
 # 58.Object.defineProperty 和 Proxy 的区别
 
-    参考答案
-
 Object.defineProperty
 
 不能监听到数组 length 属性的变化；
