@@ -8,7 +8,10 @@ https://github.com/GiantAxeWhy/MVVM-why.git
 http://81.70.248.176:12306/
 
       > An awesome project.
-      > 在京东的半年工作中，负责四个项目的搭建，业务模块的实现联调等工作，主要技术栈使用的 vue。提交了两片专利，一篇已经过审，一篇审查中，分别是虚拟列表的不定高实现，与高性能深拷贝在项目中的应用。同时业余时间实现了自己的技术博客搭建采用 vue+express+mysql 的技术栈，同时前段时间自己实现了一个 min-vue,基本自主实现了一些核心基础功能.
+      > 在京东的半年工作中，负责四个项目的搭建，业务模块的实现联调等工作，主要技术栈使用的 vue。半年过程中提交了两片专利，一篇已经过审，一篇审查中，分别是 基于大数据的虚拟列表的不定高实现，
+      与基于大数据的高性能深拷贝在项目中的应用。
+      同时业余时间实现了自己的技术博客搭建采用 vue+express+mysql 的技术栈，同时前段时间自己实现了一个 min-vue,基本自主实现了一些核心基础功能.
+      Vue.js 的核心是一个允许采用简洁的模板语法来声明式地将数据渲染进 DOM 的系统。
       > 在虚拟滚动实现的过程中，封装了一个小组件
       > 1、计算当前可视区域的起始数据索引（startIndex）
       > 2、计算当前可视区域的末尾数据索引（endIndex）
@@ -23,7 +26,8 @@ http://81.70.248.176:12306/
       > 3、数据的起始索引 startIndex = Math.floor(scrollTop / itemSize)
       > 4、数据的结束索引 endIndex = startIndex + visibleCount
       > 5、列表显示数据为 visibleData = listData.slice(startIndex,endIndex)
-      > 当滚动后，由于渲染区域相对于可视区域已经发生了偏移，此时我需要获取一个偏移量 startOffset，通过样式控制将渲染区域偏移至可视区域中。 偏移量 startOffset = scrollTop - (scrollTop % itemSize);
+      > 当滚动后，由于渲染区域相对于可视区域已经发生了偏移，此时我需要获取一个偏移量 startOffset，通过样式控制将渲染区域偏移至可视区域中。
+       偏移量 startOffset = scrollTop - (scrollTop % itemSize);
       > 扩展 当需要渲染的 item 高度不固定时
       以预估高度先行渲染，然后获取真实高度并缓存。
 
