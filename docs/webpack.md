@@ -423,3 +423,282 @@ Babel 大概分为三大部分：
 
       Taro 就是利用 babel 完成的小程序语法转换
       生成：以新的 AST 为基础生成代码
+# webpack优化
+## 1 合理的配置mode参数与devtool参数
+mode可设置development production两个参数
+如果没有设置，webpack4 会将 mode 的默认值设置为 production
+production模式下会进行tree shaking(去除无用代码)和uglifyjs(代码压缩混淆)
+
+## 2 缩小文件的搜索范围(配置include exclude alias noParse extensions)
+    alias: 当我们代码中出现 import 'vue'时， webpack会采用向上递归搜索的方式去node_modules 目录下找。为了减少搜索范围我们可以直接告诉webpack去哪个路径下查找。也就是别名(alias)的配置。
+    include exclude 同样配置include exclude也可以减少webpack loader的搜索转换时间。
+    noParse  当我们代码中使用到import jq from 'jquery'时，webpack会去解析jq这个库是否有依赖其他的包。但是我们对类似jquery这类依赖库，一般会认为不会引用其他的包(特殊除外,自行判断)。增加noParse属性,告诉webpack不必解析，以此增加打包速度。
+    extensions webpack会根据extensions定义的后缀查找文件(频率较高的文件类型优先写在前面)
+## 3 使用HappyPack开启多进程Loader转换
+
+在webpack构建过程中，实际上耗费时间大多数用在loader解析转换以及代码的压缩中。日常开发中我们需要使用Loader对js，css，图片，字体等文件做转换操作，并且转换的文件数据量也是非常大。由于js单线程的特性使得这些转换操作不能并发处理文件，而是需要一个个文件进行处理。HappyPack的基本原理是将这部分任务分解到多个子进程中去并行处理，子进程处理完成后把结果发送到主进程中，从而减少总的构建时间
+
+## 4 使用webpack-parallel-uglify-plugin 增强代码压缩
+上面对于loader转换已经做优化，那么下面还有另一个难点就是优化代码的压缩时间。
+
+## 5 抽离第三方模块
+  对于开发项目中不经常会变更的静态依赖文件。类似于我们的elementUi、vue全家桶等等。因为很少会变更，所以我们不希望这些依赖要被集成到每一次的构建逻辑中去。 这样做的好处是每次更改我本地代码的文件的时候，webpack只需要打包我项目本身的文件代码，而不会再去编译第三方库。以后只要我们不升级第三方包的时候，那么webpack就不会对这些库去打包，这样可以快速的提高打包的速度。
+
+这里我们使用webpack内置的DllPlugin DllReferencePlugin进行抽离
+在与webpack配置文件同级目录下新建webpack.dll.config.js 代码如下
+```js
+// webpack.dll.config.js
+const path = require("path");
+const webpack = require("webpack");
+module.exports = {
+  // 你想要打包的模块的数组
+  entry: {
+    vendor: ['vue','element-ui']
+  },
+  output: {
+    path: path.resolve(__dirname, 'static/js'), // 打包后文件输出的位置
+    filename: '[name].dll.js',
+    library: '[name]_library'
+     // 这里需要和webpack.DllPlugin中的`name: '[name]_library',`保持一致。
+  },
+  plugins: [
+    new webpack.DllPlugin({
+      path: path.resolve(__dirname, '[name]-manifest.json'),
+      name: '[name]_library',
+      context: __dirname
+    })
+  ]
+};
+
+```
+在package.json中配置如下命令
+
+```js
+"dll": "webpack --config build/webpack.dll.config.js"
+
+```
+接下来在我们的webpack.config.js中增加以下代码
+```js
+module.exports = {
+  plugins: [
+    new webpack.DllReferencePlugin({
+      context: __dirname,
+      manifest: require('./vendor-manifest.json')
+    }),
+    new CopyWebpackPlugin([ // 拷贝生成的文件到dist目录 这样每次不必手动去cv
+      {from: 'static', to:'static'}
+    ]),
+  ]
+};
+
+```
+执行
+
+npm run dll
+会发现生成了我们需要的集合第三地方 代码的vendor.dll.js 我们需要在html文件中手动引入这个js文件
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>老yuan</title>
+  <script src="static/js/vendor.dll.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+
+```
+这样如果我们没有更新第三方依赖包，就不必npm run dll。直接执行npm run dev npm run build的时候会发现我们的打包速度明显有所提升。因为我们已经通过dllPlugin将第三方依赖包抽离出来了。
+
+## 6 配置缓存
+
+我们每次执行构建都会把所有的文件都重复编译一遍，这样的重复工作是否可以被缓存下来呢，答案是可以的，目前大部分 loader 都提供了cache 配置项。比如在 babel-loader 中，可以通过设置cacheDirectory 来开启缓存，babel-loader?cacheDirectory=true 就会将每次的编译结果写进硬盘文件（默认是在项目根目录下的node_modules/.cache/babel-loader目录内，当然你也可以自定义）
+
+
+但如果 loader 不支持缓存呢？我们也有方法,我们可以通过cache-loader ，它所做的事情很简单，就是 babel-loader 开启 cache 后做的事情，将 loader 的编译结果写入硬盘缓存。再次构建会先比较一下，如果文件较之前的没有发生变化则会直接使用缓存。使用方法如官方 demo 所示，在一些性能开销较大的 loader 之前添加此 loader即可
+
+npm i -D cache-loader
+
+## 7 优化打包文件体积
+## 引入webpack-bundle-analyzer分析打包后的文件
+webpack-bundle-analyzer将打包后的内容束展示为方便交互的直观树状图，让我们知道我们所构建包中真正引入的内容
+## externals
+按照官方文档的解释，如果我们想引用一个库，但是又不想让webpack打包，并且又不影响我们在程序中以CMD、AMD或者window/global全局等方式进行使用，那就可以通过配置Externals。这个功能主要是用在创建一个库的时候用的，但是也可以在我们项目开发中充分使用
+Externals的方式，我们将这些不需要打包的静态资源从构建逻辑中剔除出去，而使用 CDN
+的方式，去引用它们。
+
+```js
+<script
+  src="https://code.jquery.com/jquery-3.1.0.js"
+  integrity="sha256-slogkvB1K3VOkzAI8QITxV3VzpOnkeNVsKvtkYLMjfk="
+  crossorigin="anonymous">
+</script>
+
+
+module.exports = {
+  //...
+  externals: {
+    jquery: 'jQuery'
+  }
+};
+
+
+import $ from 'jquery';
+$('.my-element').animate(/* ... */);
+
+```
+##  Tree-shaking
+这里单独提一下tree-shaking,是因为这里有个坑。tree-shaking的主要作用是用来清除代码中无用的部分。目前在webpack4 我们设置mode为production的时候已经自动开启了tree-shaking。但是要想使其生效，生成的代码必须是ES6模块。不能使用其它类型的模块如CommonJS之流。如果使用Babel的话，这里有一个小问题，因为Babel的预案（preset）默认会将任何模块类型都转译成CommonJS类型，这样会导致tree-shaking失效。修正这个问题也很简单，在.babelrc文件或在webpack.config.js文件中设置modules： false就好了
+
+
+# 手写loader
+loader从本质上来说其实就是一个node模块。相当于一台榨汁机(loader)将相关类型的文件代码(code)给它。根据我们设置的规则，经过它的一系列加工后还给我们加工好的果汁(code)。
+
+loader编写原则
+
+    单一原则: 每个 Loader 只做一件事；
+    链式调用: Webpack 会按顺序链式调用每个 Loader；
+    统一原则: 遵循 Webpack 制定的设计规则和结构，输入与输出均为字符串，各个 Loader 完全独立，即插即用；
+
+在日常开发环境中，为了方便调试我们往往会加入许多console打印。但是我们不希望在生产环境中存在打印的值。那么这里我们自己实现一个loader去除代码中的console
+
+    知识点普及之AST。AST通俗的来说，假设我们有一个文件a.js,我们对a.js里面的1000行进行一些操作处理,比如为所有的await 增加try catch,以及其他操作，但是a.js里面的代码本质上来说就是一堆字符串。那我们怎么办呢，那就是转换为带标记信息的对象(抽象语法树)我们方便进行增删改查。这个带标记的对象(抽象语法树)就是AST。这里推荐一篇不错的AST文章 https://segmentfault.com/a/1190000016231512
+
+npm i -D @babel/parser @babel/traverse @babel/generator @babel/types
+      @babel/parser 将源代码解析成 AST
+      @babel/traverse 对AST节点进行递归遍历，生成一个便于操作、转换的path对象
+      @babel/generator 将AST解码生成js代码
+      @babel/types通过该模块对具体的AST节点进行进行增、删、改、查
+新建drop-console.js
+
+```js
+
+const parser = require('@babel/parser')
+const traverse = require('@babel/traverse').default
+const generator = require('@babel/generator').default
+const t = require('@babel/types')
+module.exports=function(source){
+  const ast = parser.parse(source,{ sourceType: 'module'})
+  traverse(ast,{
+    CallExpression(path){
+      if(t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object, {name: "console"})){
+        path.remove()
+      }
+    }
+  })
+  const output = generator(ast, {}, source);
+  return output.code
+}
+
+```
+如何使用
+```js
+const path = require('path')
+module.exports = {
+  mode:'development',
+  entry:path.resolve(__dirname,'index.js'),
+  output:{
+    filename:'[name].[contenthash].js',
+    path:path.resolve(__dirname,'dist')
+  },
+  module:{
+    rules:[{
+      test:/\.js$/,
+      use:path.resolve(__dirname,'drop-console.js')
+      }
+    ]
+  }
+}
+
+```
+实际上在webpack4中已经集成了去除console功能，在minimizer中可配置 去除console
+
+# 2 手写webpack plugin
+在 Webpack 运行的生命周期中会广播出许多事件，Plugin 可以监听这些事件，在合适的时机通过Webpack提供的API改变输出结果。通俗来说：一盘美味的 盐豆炒鸡蛋 需要经历烧油 炒制 调味到最后的装盘等过程，而plugin相当于可以监控每个环节并进行操作，比如可以写一个少放胡椒粉plugin,监控webpack暴露出的生命周期事件(调味)，在调味的时候执行少放胡椒粉操作。那么它与loader的区别是什么呢？上面我们也提到了loader的单一原则,loader只能一件事，比如说less-loader,只能解析less文件，plugin则是针对整个流程执行广泛的任务。
+
+一个基本的plugin插件结构如下
+
+```js
+class firstPlugin {
+  constructor (options) {
+    console.log('firstPlugin options', options)
+  }
+  apply (compiler) {
+    compiler.plugin('done', compilation => {
+      console.log('firstPlugin')
+    ))
+  }
+}
+
+module.exports = firstPlugin
+
+```
+compiler 、compilation是什么？
+
+compiler 对象包含了Webpack 环境所有的的配置信息。这个对象在启动 webpack 时被一次性建立，并配置好所有可操作的设置，包括 options，loader 和 plugin。当在 webpack 环境中应用一个插件时，插件将收到此 compiler 对象的引用。可以使用它来访问 webpack 的主环境。
+
+compilation对象包含了当前的模块资源、编译生成资源、变化的文件等。当运行webpack 开发环境中间件时，每当检测到一个文件变化，就会创建一个新的 compilation，从而生成一组新的编译资源。compilation 对象也提供了很多关键时机的回调，以供插件做自定义处理时选择使用。
+
+compiler和 compilation的区别在于
+
+    compiler代表了整个webpack从启动到关闭的生命周期，而compilation 只是代表了一次新的编译过程
+
+
+    compiler和compilation暴露出许多钩子，我们可以根据实际需求的场景进行自定义处理
+
+下面我们手动开发一个简单的需求,在生成打包文件之前自动生成一个关于打包出文件的大小信息
+
+新建一个webpack-firstPlugin.js
+
+```js
+class firstPlugin{
+  constructor(options){
+    this.options = options
+  }
+  apply(compiler){
+    compiler.plugin('emit',(compilation,callback)=>{
+      let str = ''
+      for (let filename in compilation.assets){
+        str += `文件:${filename}  大小${compilation.assets[filename]['size']()}\n`
+      }
+      // 通过compilation.assets可以获取打包后静态资源信息，同样也可以写入资源
+      compilation.assets['fileSize.md'] = {
+        source:function(){
+          return str
+        },
+        size:function(){
+          return str.length
+        }
+      }
+      callback()
+    })
+  }
+}
+module.exports = firstPlugin
+
+```
+如何使用
+```js
+const path = require('path')
+const firstPlugin = require('webpack-firstPlugin.js')
+module.exports = {
+    // 省略其他代码
+    plugins:[
+        new firstPlugin()
+    ]
+}
+
+```
+执行 npm run build即可看到在dist文件夹中生成了一个包含打包文件信息的fileSize.md
+
+上面两个loader与plugin案例只是一个引导，实际开发需求中的loader与plugin要考虑的方面很多，建议大家自己多动手尝试一下。
+
+# webpack5优化
+      使用持久化缓存提高构建性能；
+      使用更好的算法和默认值改进长期缓存（long-term caching）；
+      清理内部结构而不引入任何破坏性的变化；
+      引入一些breaking changes，以便尽可能长的使用v5版本。

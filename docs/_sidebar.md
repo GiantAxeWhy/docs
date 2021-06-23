@@ -17,6 +17,7 @@
   - [Generator 函数的语法](Generator.md)
   - [async](async.md)
   - [class 的语法与继承](class.md)
+  - [高性能深拷贝](deepclone.md)
   - [Javascript 汇总](javaScript.md)
 
 - CSS
