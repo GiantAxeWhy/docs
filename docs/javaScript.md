@@ -1454,6 +1454,35 @@ WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。但�
 
 # 32.实现 array.prototype.map && filter && reduce && foreach && find
 
+假设我们有一个数组，每个元素是一个人。你面前站了一排人。foreach 就是你按顺序一个一个跟他们做点什么，具体做什么，随便:people.forEach(function (dude) {
+dude.pickUpSoap();
+});
+map 就是你手里拿一个盒子（一个新的数组），一个一个叫他们把钱包扔进去。结束的时候你获得了一个新的数组，里面是大家的钱包，钱包的顺序和人的顺序一一对应。
+
+```js
+var wallets = people.map(function (dude) {
+  return dude.wallet;
+});
+```
+
+reduce 就是你拿着钱包，一个一个数过去看里面有多少钱啊？每检查一个，你就和前面的总和加一起来。这样结束的时候你就知道大家总共有多少钱了。
+
+```js
+var totalMoney = wallets.reduce(function (countedMoney, wallet) {
+  return countedMoney + wallet.money;
+}, 0);
+```
+
+补充一个 filter 的：你一个个钱包数过去的时候，里面钱少于 100 块的不要（留在原来的盒子里），多于 100 块的丢到一个新的盒子里。这样结束的时候你又有了一个新的数组，里面是所有钱多于 100 块的钱包：
+
+```js
+var fatWallets = wallets.filter(function (wallet) {
+  return wallet.money > 100;
+});
+```
+
+最后要说明一点这个类比和实际代码的一个区别，那就是 map 和 filter 都是 immutable methods，也就是说它们只会返回一个新数组，而不会改变原来的那个数组，
+
 map
 map 方法接收一个回调函数，函数内接收三个参数，当前项、索引、原数组，返回一个新的数组，并且数组长度不变。 知道了这些特征之后，我们用 reduce 重塑 map 。
 map 方法会给原数组中的每个元素都按顺序调用一次 callback 函数。callback 每次执行后的返回值（包括 undefined）组合起来形成一个新数组。 callback 函数只会在有值的索引上被调用；那些从来没被赋过值或者使用 delete 删除的索引则不会被调用。让数组通过某种计算产生一个新数组,影射成一个新的数组,

@@ -121,6 +121,76 @@ class Dog extend Animal{
 }
 ```
 
+# 实现一个 compose 函数
+
+```js
+// 用法如下:
+function fn1(x) {
+  return x + 1;
+}
+function fn2(x) {
+  return x + 2;
+}
+function fn3(x) {
+  return x + 3;
+}
+function fn4(x) {
+  return x + 4;
+}
+const a = compose(fn1, fn2, fn3, fn4);
+console.log(a(1)); // 1+4+3+2+1=11
+//实现
+function compose(...fn) {
+  if (!fn.length) return (v) => v;
+  if (fn.length === 1) return fn[0];
+  return fn.reduce(
+    (pre, cur) =>
+      (...args) =>
+        pre(cur(...args))
+  );
+}
+```
+
+# settimeout 模拟实现 setinterval(带清除定时器的版本)
+
+题目描述:setinterval 用来实现循环定时调用 可能会存在一定的问题 能用 settimeout 解决吗
+
+```js
+function mySettimeout(fn, t) {
+  let timer = null;
+  function interval() {
+    fn();
+    timer = setTimeout(interval, t);
+  }
+  interval();
+  return {
+    cancel: () => {
+      clearTimeout(timer);
+    },
+  };
+}
+// let a=mySettimeout(()=>{
+//   console.log(111);
+// },1000)
+// let b=mySettimeout(() => {
+//   console.log(222)
+// }, 1000)
+```
+
+使用 setinterval 模拟实现 settimeout 吗？
+
+```js
+const mySetTimeout = (fn, time) => {
+  const timer = setInterval(() => {
+    clearInterval(timer);
+    fn();
+  }, time);
+};
+// mySetTimeout(()=>{
+//   console.log(1);
+// },1000)
+```
+
 # 数组去重
 
 es5
@@ -347,56 +417,86 @@ function deepCopy(obj, cache = []) {
 }
 ```
 
+# 模板引擎实现
+
+```js
+let template = "我是{{name}}，年龄{{age}}，性别{{sex}}";
+let data = {
+  name: "姓名",
+  age: 18,
+};
+render(template, data); // 我是姓名，年龄18，性别undefined
+```
+
+```js
+function render(template, data) {
+  const reg = /\{\{(\w+)\}\}/; // 模板字符串正则
+  if (reg.test(template)) {
+    // 判断模板里是否有模板字符串
+    const name = reg.exec(template)[1]; // 查找当前模板里第一个模板字符串的字段
+    template = template.replace(reg, data[name]); // 将第一个模板字符串渲染
+    return render(template, data); // 递归的渲染并返回渲染后的结构
+  }
+  return template; // 如果模板没有模板字符串直接返回
+}
+```
+
 # 事件总线（发布订阅）
 
 ```js
 class EventEmitter {
   constructor() {
-    this.cache = {};
+    this.events = {};
   }
-  on(name, fn) {
-    if (this.cache[name]) {
-      this.cache[name].push(fn);
+  // 实现订阅
+  on(type, callBack) {
+    if (!this.events[type]) {
+      this.events[type] = [callBack];
     } else {
-      this.cache[name] = [fn];
+      this.events[type].push(callBack);
     }
   }
-  off(name, fn) {
-    let tasks = this.cache[name];
-    if (tasks) {
-      const index = tasks.findIndex((f) => f === fn || f.callback === fn);
-      if (index >= 0) {
-        tasks.splice(index, 1);
-      }
-    }
+  // 删除订阅
+  off(type, callBack) {
+    if (!this.events[type]) return;
+    this.events[type] = this.events[type].filter((item) => {
+      return item !== callBack;
+    });
   }
-  emit(name, once = false, ...args) {
-    if (this.cache[name]) {
-      // 创建副本，如果回调函数内继续注册相同事件，会造成死循环
-      let tasks = this.cache[name].slice();
-      for (let fn of tasks) {
-        fn(...args);
-      }
-      if (once) {
-        delete this.cache[name];
-      }
+  // 只执行一次订阅事件
+  once(type, callBack) {
+    function fn() {
+      callBack();
+      this.off(type, fn);
     }
+    this.on(type, fn);
+  }
+  // 触发事件
+  emit(type, ...rest) {
+    this.events[type] &&
+      this.events[type].forEach((fn) => fn.apply(this, rest));
   }
 }
+// 使用如下
+// const event = new EventEmitter();
 
-// 测试
-let eventBus = new EventEmitter();
-let fn1 = function (name, age) {
-  console.log(`${name} ${age}`);
-};
-let fn2 = function (name, age) {
-  console.log(`hello, ${name} ${age}`);
-};
-eventBus.on("aaa", fn1);
-eventBus.on("aaa", fn2);
-eventBus.emit("aaa", false, "布兰", 12);
-// '布兰 12'
-// 'hello, 布兰 12'
+// const handle = (...rest) => {
+//   console.log(rest);
+// };
+
+// event.on("click", handle);
+
+// event.emit("click", 1, 2, 3, 4);
+
+// event.off("click", handle);
+
+// event.emit("click", 1, 2);
+
+// event.once("dbClick", () => {
+//   console.log(123456);
+// });
+// event.emit("dbClick");
+// event.emit("dbClick");
 ```
 
 # 解析 URL 参数为对象
@@ -1597,6 +1697,75 @@ limit(2, [1000, 1000, 1000, 1000], timeout).then((res) => {
 });
 ```
 
+JS 实现一个带并发限制的异步调度器 Scheduler，保证同时运行的任务最多有两个
+
+```js
+ addTask(1000,"1");
+ addTask(500,"2");
+ addTask(300,"3");
+ addTask(400,"4");
+ 的输出顺序是：2 3 1 4
+
+ 整个的完整执行流程：
+
+一开始1、2两个任务开始执行
+500ms时，2任务执行完毕，输出2，任务3开始执行
+800ms时，3任务执行完毕，输出3，任务4开始执行
+1000ms时，1任务执行完毕，输出1，此时只剩下4任务在执行
+1200ms时，4任务执行完毕，输出4
+
+
+```
+
+实现
+
+```js
+class Scheduler {
+  constructor(limit) {
+    this.queue = [];
+    this.maxCount = limit;
+    this.runCounts = 0;
+  }
+  add(time, order) {
+    const promiseCreator = () => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          console.log(order);
+          resolve();
+        }, time);
+      });
+    };
+    this.queue.push(promiseCreator);
+  }
+  taskStart() {
+    for (let i = 0; i < this.maxCount; i++) {
+      this.request();
+    }
+  }
+  request() {
+    if (!this.queue || !this.queue.length || this.runCounts >= this.maxCount) {
+      return;
+    }
+    this.runCounts++;
+    this.queue
+      .shift()()
+      .then(() => {
+        this.runCounts--;
+        this.request();
+      });
+  }
+}
+const scheduler = new Scheduler(2);
+const addTask = (time, order) => {
+  scheduler.add(time, order);
+};
+addTask(1000, "1");
+addTask(500, "2");
+addTask(300, "3");
+addTask(400, "4");
+scheduler.taskStart();
+```
+
 # 异步串行 | 异步并行
 
 ```js
@@ -2463,93 +2632,161 @@ class Solution {
 
 ```js
 //冒泡排序
-	var arr = [4,1,6,9,3,2,8,7];
-	function compare(a,b){
-	    if(b<a)return true;
-	    else return false
-	}
-	function change(arr,a,b){
-	    let temp = arr[a];
-	    arr[a] = arr[b];
-	     arr[b] = temp
-	}
-	function sort(arr){
-	    for(let i = 0 ; i<arr.length;i++){
-	          for(let j = 0 ; j<arr.length -1 ;j++){
-	                if(compare(arr[j],arr[j+1])){
-	                    change(arr,j,j+1)
-	                }
-	            }
-	    }
-	}
-	sort(arr);
-	console.log(arr);
-	//选择排序
-	//选择排序，内层循环，每一圈选出一个最大的，然后放在后面
-	    var arr = [4,1,6,9,3,2,8,7];
-	    function compare(arr,a,b){
-	        if(a<b)return true;
-	        else return false
-	    }
-	    function change(arr,a,b){
-	        let temp = arr[a];
-	        arr[a]= arr[b];
-	        arr[b] = temp;
-	    }
-	    function sort(arr){
-	        for(let i = 0 ; i<arr.length;i++){
-	                let maxIndex  =0;
-	               for(let j = 0 ;j<arr.length-i-1;j++){
-	                        if(compare(arr,arr[i],arr[j])){
-	                            maxIndex = j
-	                        }
-	                    }
-	                    change(arr,maxIndex,arr.length - 1 - i)
-	        }   }
-	//快速排序
-var arr = [4,1,6,9,3,2,8,7];
-Function quickSort(arr){
-Let left=[],right=[],index=Math.floor(arr.length/2),
-Pivox = arr.splice(index,1)[0];
-for(let I = 0 ; i<arr.length;i++){
-if(pivox>arr[i]){
-Left.push(arr[i])
-}else{
-Right.push(arr[i])
+function bubbleSort(arr) {
+  // 缓存数组长度
+  const len = arr.length;
+  // 外层循环用于控制从头到尾的比较+交换到底有多少轮
+  for (let i = 0; i < len; i++) {
+    // 内层循环用于完成每一轮遍历过程中的重复比较+交换
+    for (let j = 0; j < len - 1; j++) {
+      // 若相邻元素前面的数比后面的大
+      if (arr[j] > arr[j + 1]) {
+        // 交换两者
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+      }
+    }
+  }
+  // 返回数组
+  return arr;
 }
-}
-Return quickSort(left).concat([pivox],quickSort(right))
-}
+// console.log(bubbleSort([3, 6, 2, 4, 1]));
 
+//选择排序
 
+//选择排序，内层循环，每一圈选出一个最大的，然后放在后面
+function selectSort(arr) {
+  // 缓存数组长度
+  const len = arr.length;
+  // 定义 minIndex，缓存当前区间最小值的索引，注意是索引
+  let minIndex;
+  // i 是当前排序区间的起点
+  for (let i = 0; i < len - 1; i++) {
+    // 初始化 minIndex 为当前区间第一个元素
+    minIndex = i;
+    // i、j分别定义当前区间的上下界，i是左边界，j是右边界
+    for (let j = i; j < len; j++) {
+      // 若 j 处的数据项比当前最小值还要小，则更新最小值索引为 j
+      if (arr[j] < arr[minIndex]) {
+        minIndex = j;
+      }
+    }
+    // 如果 minIndex 对应元素不是目前的头部元素，则交换两者
+    if (minIndex !== i) {
+      [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
+    }
+  }
+  return arr;
+}
+// console.log(quickSort([3, 6, 2, 4, 1]));
+
+//快速排序
+function quickSort(arr) {
+  if (arr.length < 2) {
+    return arr;
+  }
+  const cur = arr[arr.length - 1];
+  const left = arr.filter((v, i) => v <= cur && i !== arr.length - 1);
+  const right = arr.filter((v) => v > cur);
+  return [...quickSort(left), cur, ...quickSort(right)];
+}
+// console.log(quickSort([3, 6, 2, 4, 1]));
 
 //插入排序
-function insertion(array) {
-  if (!checkArray(array)) return
-  for (let i = 1; i < array.length; i++) {
-    for (let j = i - 1; j >= 0 && array[j] > array[j + 1]; j--)
-      swap(array, j, j + 1);
+function insertSort(arr) {
+  for (let i = 1; i < arr.length; i++) {
+    let j = i;
+    let target = arr[j];
+    while (j > 0 && arr[j - 1] > target) {
+      arr[j] = arr[j - 1];
+      j--;
+    }
+    arr[j] = target;
   }
-  return array;
-	}
+  return arr;
+}
+// console.log(insertSort([3, 6, 2, 4, 1]));
+
 //选择排序
 function selection(array) {
-  if (!checkArray(array)) return
+  if (!checkArray(array)) return;
   for (let i = 0; i < array.length - 1; i++) {
     let minIndex = i;
     for (let j = i + 1; j < array.length; j++) {
       minIndex = array[j] < array[minIndex] ? j : minIndex;
     }
     swap(array, i, minIndex);
-  } return array;}
+  }
+  return array;
+}
+//归并排序
+function merge(left, right) {
+  let res = [];
+  let i = 0;
+  let j = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] < right[j]) {
+      res.push(left[i]);
+      i++;
+    } else {
+      res.push(right[j]);
+      j++;
+    }
+  }
+  if (i < left.length) {
+    res.push(...left.slice(i));
+  } else {
+    res.push(...right.slice(j));
+  }
+  return res;
+}
 
+function mergeSort(arr) {
+  if (arr.length < 2) {
+    return arr;
+  }
+  const mid = Math.floor(arr.length / 2);
+
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+  return merge(left, right);
+}
+// console.log(mergeSort([3, 6, 2, 4, 1]));
+
+//二分查找
+function search(arr, target, start, end) {
+  let targetIndex = -1;
+
+  let mid = Math.floor((start + end) / 2);
+
+  if (arr[mid] === target) {
+    targetIndex = mid;
+    return targetIndex;
+  }
+
+  if (start >= end) {
+    return targetIndex;
+  }
+
+  if (arr[mid] < target) {
+    return search(arr, target, mid + 1, end);
+  } else {
+    return search(arr, target, start, mid - 1);
+  }
+}
+// const dataArr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+// const position = search(dataArr, 6, 0, dataArr.length - 1);
+// if (position !== -1) {
+//   console.log(`目标元素在数组中的位置:${position}`);
+// } else {
+//   console.log("目标元素不在数组中");
+// }
 
 //数组中第k大元素
 
-let findKthLargest = function(nums, k) {
-    nums.sort((a, b) => b - a).slice(0, k);
-    return nums[k-1]
- }
+let findKthLargest = function (nums, k) {
+  nums.sort((a, b) => b - a).slice(0, k);
+  return nums[k - 1];
+};
 ```
 
 # 链表
@@ -2968,4 +3205,52 @@ private Node addLists(Node head1, Node head2) {
     }
 
 
+```
+
+# LRU 算法
+
+```js
+//  一个Map对象在迭代时会根据对象中元素的插入顺序来进行
+// 新添加的元素会被插入到map的末尾，整个栈倒序查看
+class LRUCache {
+  constructor(capacity) {
+    this.secretKey = new Map();
+    this.capacity = capacity;
+  }
+  get(key) {
+    if (this.secretKey.has(key)) {
+      let tempValue = this.secretKey.get(key);
+      this.secretKey.delete(key);
+      this.secretKey.set(key, tempValue);
+      return tempValue;
+    } else return -1;
+  }
+  put(key, value) {
+    // key存在，仅修改值
+    if (this.secretKey.has(key)) {
+      this.secretKey.delete(key);
+      this.secretKey.set(key, value);
+    }
+    // key不存在，cache未满
+    else if (this.secretKey.size < this.capacity) {
+      this.secretKey.set(key, value);
+    }
+    // 添加新key，删除旧key
+    else {
+      this.secretKey.set(key, value);
+      // 删除map的第一个元素，即为最长未使用的
+      this.secretKey.delete(this.secretKey.keys().next().value);
+    }
+  }
+}
+// let cache = new LRUCache(2);
+// cache.put(1, 1);
+// cache.put(2, 2);
+// console.log("cache.get(1)", cache.get(1))// 返回  1
+// cache.put(3, 3);// 该操作会使得密钥 2 作废
+// console.log("cache.get(2)", cache.get(2))// 返回 -1 (未找到)
+// cache.put(4, 4);// 该操作会使得密钥 1 作废
+// console.log("cache.get(1)", cache.get(1))// 返回 -1 (未找到)
+// console.log("cache.get(3)", cache.get(3))// 返回  3
+// console.log("cache.get(4)", cache.get(4))// 返回  4
 ```
