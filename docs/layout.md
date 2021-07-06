@@ -893,6 +893,11 @@ fixed（固定定位）： 所固定的参照对象是可视窗口。
 行内元素： a、b、 span、img、 input、 strong、 select、 label、 em、 button、 textarea；
 块级元素： div、 ul、 li、 dl、 dt、 dd、 p、 h1-h6、 blockquote；
 空元素： 即没有实际内容内容的 html 元素，如：br、 meta、 hr、 link、 input、 img；
+1，块级元素独占一行，其宽度自动填满父元素宽度
+行内元素不独占一行，相邻行内元素排在同一行，直到排不下，才换行，其宽度随元素的内容而变化
+2，一般情况下，块级元素可设置 width, height 属性，行内元素设置 width, height 无效（置换元素除外）
+(注意：块级元素即使设置了宽度，仍然是独占一行的)
+3，块级元素可以设置 margin 和 padding. 行内元素的水平方向的 padding-left,padding-right,margin-left,margin-right 都产生边距效果，但竖直方向的 padding-top,padding-bottom,margin-top,margin-bottom 都不会产生边距效果。（水平方向有效，竖直方向无效）
 
 # 34. style 标签写在 body 后与 body 前有什么区别？
 
