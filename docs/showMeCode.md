@@ -762,6 +762,29 @@ let addCurry = curry(add);
 addCurry(1)(2)(3);
 ```
 
+高阶函数 实现 sum(2)(3)
+
+```js
+function add() {
+  var args = [].slice.call(arguments);
+
+  var fn = function () {
+    var arg_fn = [].slice.call(arguments);
+    return add.apply(null, args.concat(arg_fn));
+  };
+
+  fn.valueOf = function () {
+    return args.reduce((a, b) => a + b);
+  };
+  return fn;
+}
+let s = add(1)(2)(3);
+// function
+console.log(typeof s);
+// 6
+console.log(Number(s));
+```
+
 # 偏函数
 
 什么是偏函数？偏函数就是将一个 n 参的函数转换成固定 x 参的函数，剩余参数（n - x）将在下次调用全部传入。举个例子：
@@ -1329,6 +1352,178 @@ Function 与 eval 有相同的字符串参数特性。
 ```js
 var json = '{"name":"小姐姐", "age":20}';
 var obj = new Function("return " + json)();
+```
+
+# 链式调用
+
+```js
+// 实现一个find函数，并且find函数能够满足下列条件
+
+// title数据类型为string|null
+// userId为主键，数据类型为number
+
+// 原始数据
+const data = [
+  { userId: 8, title: "title1" },
+  { userId: 11, title: "other" },
+  { userId: 15, title: null },
+  { userId: 19, title: "title2" },
+];
+
+// 查找data中，符合条件的数据，并进行排序
+const result = find(data)
+  .where({
+    title: /\d$/,
+  })
+  .orderBy("userId", "desc");
+
+// 输出
+[
+  { userId: 19, title: "title2" },
+  { userId: 8, title: "title1" },
+];
+```
+
+```js
+function find(origin) {
+  return {
+    data: origin,
+    where: function (searchObj) {
+      const keys = Reflect.ownKeys(searchObj);
+
+      for (let i = 0; i < keys.length; i++) {
+        this.data = this.data.filter((item) =>
+          searchObj[keys[i]].test(item[keys[i]])
+        );
+      }
+
+      return find(this.data);
+    },
+    orderBy: function (key, sorter) {
+      this.data.sort((a, b) => {
+        return sorter === "desc" ? b[key] - a[key] : a[key] - b[key];
+      });
+
+      return this.data;
+    },
+  };
+}
+```
+
+# 对象深度的比较
+
+```js
+// 已知有两个对象obj1和obj2，实现isEqual函数判断对象是否相等
+const obj1 = {
+  a: 1,
+  c: 3,
+  b: {
+    c: [1, 2],
+  },
+};
+const obj2 = {
+  c: 4,
+  b: {
+    c: [1, 2],
+  },
+  a: 1,
+};
+
+// isEqual函数，相等输出true，不相等输出false
+isEqual(obj1, obj2);
+```
+
+```js
+// 答案仅供参考
+// 更详细的解答建议参考Underscore源码[https://github.com/lessfish/underscore-analysis/blob/master/underscore-1.8.3.js/src/underscore-1.8.3.js#L1094-L1190](https://github.com/lessfish/underscore-analysis/blob/master/underscore-1.8.3.js/src/underscore-1.8.3.js#L1094-L1190)
+function isEqual(A, B) {
+  const keysA = Object.keys(A);
+  const keysB = Object.keys(B);
+
+  // 健长不一致的话就更谈不上相等了
+  if (keysA.length !== keysB.length) return false;
+
+  for (let i = 0; i < keysA.length; i++) {
+    const key = keysA[i];
+
+    // 类型不等的话直接就不相等了
+    if (typeof A[key] !== typeof B[key]) return false;
+
+    // 当都不是对象的时候直接判断值是否相等
+    if (
+      typeof A[key] !== "object" &&
+      typeof B[key] !== "object" &&
+      A[key] !== B[key]
+    ) {
+      return false;
+    }
+
+    if (Array.isArray(A[key]) && Array.isArray(B[key])) {
+      if (!arrayEqual(A[key], B[key])) return false;
+    }
+
+    // 递归判断
+    if (typeof A[key] === "object" && typeof B[key] === "object") {
+      if (!isEqual(A[key], B[key])) return false;
+    }
+  }
+
+  return true;
+}
+
+function arrayEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) return false;
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) return false;
+  }
+
+  return true;
+}
+isEqual(obj1, obj2);
+```
+
+# 是否存在循环引用
+
+```js
+// 判断JS对象是否存在循环引用
+const obj = {
+  a: 1,
+  b: 2,
+};
+
+obj.c = obj;
+
+// isHasCircle函数， 存在环输出true，不存在的话输出false
+isHasCircle(obj);
+```
+
+```js
+function isHasCircle(obj) {
+  let hasCircle = false;
+  const map = new Map();
+
+  function loop(obj) {
+    const keys = Object.keys(obj);
+
+    keys.forEach((key) => {
+      const value = obj[key];
+      if (typeof value == "object" && value !== null) {
+        if (map.has(value)) {
+          hasCircle = true;
+          return;
+        } else {
+          map.set(value);
+          loop(value);
+        }
+      }
+    });
+  }
+
+  loop(obj);
+
+  return hasCircle;
+}
 ```
 
 # 实现 promise
@@ -2791,6 +2986,27 @@ let findKthLargest = function (nums, k) {
 
 # 链表
 
+# 反转单向链表
+
+```js
+function reverse(list) {
+  var p = list.head,
+    q = null;
+  while (p.next !== null) {
+    q = p.next;
+    p.next = q.next;
+    q.next = list.head.next;
+    list.head.next = q;
+  }
+  return list;
+}
+```
+
+定义两个指针 P，Q；
+Q 是 P 的 next；
+贯穿的思想是将 P 后面的一个插入到 Head 之后，后面的连接起来；
+前提是 P 的后一个非空
+
 # 链表中倒数第 k 个节点;
 
 ```js
@@ -3253,4 +3469,122 @@ class LRUCache {
 // console.log("cache.get(1)", cache.get(1))// 返回 -1 (未找到)
 // console.log("cache.get(3)", cache.get(3))// 返回  3
 // console.log("cache.get(4)", cache.get(4))// 返回  4
+```
+
+# 大数相加
+
+```js
+let a = "9007199254740991";
+let b = "1234567899999999999";
+
+function add(a, b) {
+  //取两个数字的最大长度
+  let maxLength = Math.max(a.length, b.length);
+  //用0去补齐长度
+  a = a.padStart(maxLength, 0); //"0009007199254740991"
+  b = b.padStart(maxLength, 0); //"1234567899999999999"
+  //定义加法过程中需要用到的变量
+  let t = 0;
+  let f = 0; //"进位"
+  let sum = "";
+  for (let i = maxLength - 1; i >= 0; i--) {
+    t = parseInt(a[i]) + parseInt(b[i]) + f;
+    f = Math.floor(t / 10);
+    sum = (t % 10) + sum;
+  }
+  if (f == 1) {
+    sum = "1" + sum;
+  }
+  return sum;
+}
+```
+
+# 扁平数据结构转 Tree
+
+```js
+//输入
+let arr = [
+  { id: 1, name: "部门1", pid: 0 },
+  { id: 2, name: "部门2", pid: 1 },
+  { id: 3, name: "部门3", pid: 1 },
+  { id: 4, name: "部门4", pid: 3 },
+  { id: 5, name: "部门5", pid: 4 },
+];
+//输出
+[
+  {
+    id: 1,
+    name: "部门1",
+    pid: 0,
+    children: [
+      {
+        id: 2,
+        name: "部门2",
+        pid: 1,
+        children: [],
+      },
+      {
+        id: 3,
+        name: "部门3",
+        pid: 1,
+        children: [
+          // 结果 ,,,
+        ],
+      },
+    ],
+  },
+];
+```
+
+```js
+/**
+ * 递归查找，获取children
+ */
+const getChildren = (data, result, pid) => {
+  for (const item of data) {
+    if (item.pid === pid) {
+      const newItem = { ...item, children: [] };
+      result.push(newItem);
+      getChildren(data, newItem.children, item.id);
+    }
+  }
+};
+
+/**
+ * 转换方法
+ */
+const arrayToTree = (data, pid) => {
+  const result = [];
+  getChildren(data, result, pid);
+  return result;
+};
+```
+
+```js
+function arrayToTree(items) {
+  const result = []; // 存放结果集
+  const itemMap = {}; //
+
+  // 先转成map存储
+  for (const item of items) {
+    itemMap[item.id] = { ...item, children: [] };
+  }
+
+  for (const item of items) {
+    const id = item.id;
+    const pid = item.pid;
+    const treeItem = itemMap[id];
+    if (pid === 0) {
+      result.push(treeItem);
+    } else {
+      if (!itemMap[pid]) {
+        itemMap[pid] = {
+          children: [],
+        };
+      }
+      itemMap[pid].children.push(treeItem);
+    }
+  }
+  return result;
+}
 ```

@@ -53,6 +53,25 @@ Etag 比 Last-Modified/If-Modified-Since 更准确。它通常是根据文件的
 
 Etag/If-None-Match 的用法对应 Last-Modified/If-Modified-Since。如果有设置协商缓存，在首次请求的时候，返回的 Response Headers 会带有 Etag 值。当再次请求没有命中强制缓存的时候，这个时候的 Request Headers 就会携带 If-None-Match 字段，它的值就是第一次请求返回的 Etag 值。服务端再用 Etag 来进行比较，如果相同就直接使用缓存，如果不同再从服务端拉取新的资源。
 
+cookie
+Cookie 一旦创建成功，那么名字无法进行修改；
+Cookie 无法跨域名，也就是www.baidu.com和www.imooc.com这2个域名下的Cookie是无法进行共享的，这是由Cookie隐私安全性所决定的，这样能够阻止非法获取其它网站的Cookie；
+每个单独的域名下面的 Cookie 数量不能超过 20 个。
+如何保证 Cookie 不会被泄露：httpOnly、设置合理的过期时间
+
+      version: 设置Cookie使用的版本号；
+      path: 该Cookie的使用路径。如果设置为“/sub1/”，则只有contextPath为“/sub1”的程序可以访问该Cookie；如果设置为“/”，则本域名下contextPath都可以访问该Cookie。注意最后一个字符必须为“/”；
+      httpOnly: 如果在Cookie中设置了HttpOnly属性，那么通过JavaScript脚本将无法读取到cookie信息，这样能有效的防止XSS攻击；
+      name: Cookie的名称，Cookie一旦创建，名称便不可更改；
+      value: Cookie的值。如果值为Unicode字符，需要为字符编码；如果值为二进制数据，则需要使用BASE64编码；
+      expires: 具体的过期时间，一般设置我们用document.cookie = 'expires = + GMT格式的日期型字符串’即可；
+      maxAge: 该Cookie失效的时间，单位秒。默认为–1；
+      domain: 可以访问该Cookie的域名，如果设置为“.jd.com”，则所有以“jd.com”结尾的域名都可以访问该Cookie。注意第一个字符必须为“.”；
+      comment: Cookie的用处说明，浏览器显示Cookie信息的时候显示该说明。
+
+Cookie 和 Session 结合使用是最常见的使用场景。我们把 session_id 存储在 Cookie 当中，然后每次请求的时候携带这个 session_id，这样我们就知道是谁发起的请求，从而返回对应的信息；
+统计页面的点击次数。
+
 # 2.HTTP 常用的状态码及使用场景？
 
 1xx：表示目前是协议的中间状态，还需要后续请求
