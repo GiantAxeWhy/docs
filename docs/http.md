@@ -1015,7 +1015,84 @@ CSP 本质上就是建立白名单，开发者明确告诉浏览器哪些外部�
 设置 HTTP Header 中的 Content-Security-Policy
 设置 meta 标签的方式 <meta http-equiv="Content-Security-Policy">
 
+## 反射型
+
+反射型 XSS 只是简单地把用户输入的数据 “反射” 给浏览器，这种攻击方式往往需要攻击者诱使用户点击一个恶意链接（攻击者可以将恶意链接直接发送给受信任用户，发送的方式有很多种，比如 email, 网站的私信、评论等，攻击者可以购买存在漏洞网站的广告，将恶意链接插入在广告的链接中），或者提交一个表单，或者进入一个恶意网站时，注入脚本进入被攻击者的网站。最简单的示例是访问一个链接，服务端返回一个可执行脚本：
+
+```js
+const http = require("http");
+function handleReequest(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.writeHead(200, { "Content-Type": "text/html; charset=UTF-8" });
+  res.write('<script>alert("反射型 XSS 攻击")</script>');
+  res.end();
+}
+
+const server = new http.Server();
+server.listen(8001, "127.0.0.1");
+server.on("request", handleReequest);
+```
+
+## 存储型
+
+存储型 XSS 会把用户输入的数据 "存储" 在服务器端，当浏览器请求数据时，脚本从服务器上传回并执行。这种 XSS 攻击具有很强的稳定性。比较常见的一个场景是攻击者在社区或论坛上写下一篇包含恶意 JavaScript 代码的文章或评论，文章或评论发表后，所有访问该文章或评论的用户，都会在他们的浏览器中执行这段恶意的 JavaScript 代码：
+
+```js
+// 例如在评论中输入以下留言
+// 如果请求这段留言的时候服务端不做转义处理，请求之后页面会执行这段恶意代码
+<script>alert('xss 攻击')</script>
+```
+
+## 基于 DOM
+
+基于 DOM 的 XSS 攻击是指通过恶意脚本修改页面的 DOM 结构，是纯粹发生在客户端的攻击
+
+```js
+<h2>XSS: </h2>
+<input type="text" id="input">
+<button id="btn">Submit</button>
+<div id="div"></div>
+<script>
+    const input = document.getElementById('input');
+    const btn = document.getElementById('btn');
+    const div = document.getElementById('div');
+
+    let val;
+
+    input.addEventListener('change', (e) => {
+        val = e.target.value;
+    }, false);
+
+    btn.addEventListener('click', () => {
+        div.innerHTML = `<a href=${val}>testLink</a>`
+    }, false);
+</script>
+
+```
+
+点击 Submit 按钮后，会在当前页面插入一个链接，其地址为用户的输入内容。如果用户在输入时构造了如下内容：
+
+```js
+'' onclick=alert(/xss/)
+```
+
+复制代码用户提交之后，页面代码就变成了：
+
+```js
+<a href onlick="alert(/xss/)">
+  testLink
+</a>
+```
+
+复制代码此时，用户点击生成的链接，就会执行对应的脚本。
+
 # 29.什么是 CSRF 攻击？如何防范 CSRF 攻击？
+
+CSRF，即 Cross Site Request Forgery，中译是跨站请求伪造，是一种劫持受信任用户向服务器发送非预期请求的攻击方式。通常情况下，CSRF 攻击是攻击者借助受害者的 Cookie 骗取服务器的信任，可以在受害者毫不知情的情况下以受害者名义伪造请求发送给受攻击服务器，从而在并未授权的情况下执行在权限保护之下的操作。
+
+使登录用户访问攻击者的网站，发起一个请求，由于 Cookie 中包含了用户的认证信息，当用户访问攻击者准备的攻击环境时，攻击者就可以对服务器发起 CSRF 攻击。
+在这个攻击过程中，攻击者借助受害者的 Cookie 骗取服务器的信任，但并不能拿到 Cookie，也看不到 Cookie 的内容。而对于服务器返回的结果，由于浏览器同源策略的限制，攻击者也无法进行解析。（攻击者的网站虽然是跨域的，但是他构造的链接是源网站的，跟源网站是同源的，所以能够携带 cookie 发起访问）。
+但是攻击者无法从返回的结果中得到任何东西，他所能做的就是给服务器发送请求，以执行请求中所描述的命令，在服务器端直接改变数据的值，而非窃取服务器中的数据。例如删除数据、修改数据，新增数据等，无法获取数据。
 
 CSRF 中文名为跨站请求伪造。原理就是攻击者构造出一个后端请求地址，诱导用户点击或者通过某些途径自动发起请求。如果用户是在登录状态下的话，后端就以为是用户在操作，从而进行相应的逻辑。
 如何防御

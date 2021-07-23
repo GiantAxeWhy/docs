@@ -1560,3 +1560,13 @@ https://juejin.cn/post/6844904116603486221
 在 Vue 中
 在 Vue 的世界里，组件是一个对象，所以高阶组件就是一个函数接受一个对象，返回一个新的包装好的对象。
 类比到 Vue 的世界里，高阶组件就是 f(object) -> 新的 object。
+
+# 66.beforeCreated 和 created 中间都做了什么
+
+```js
+callHook(vm, "beforeCreate");
+initInjections(vm); // resolve injections before data/props
+initState(vm);
+initProvide(vm); // resolve provide after data/props
+callHook(vm, "created");
+```
