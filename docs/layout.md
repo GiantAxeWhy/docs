@@ -1582,3 +1582,94 @@ flex 布局
   animation: greenLamp 10s ease infinite;
 }
 ```
+
+# 43 H5 与 css3 新特性
+
+h5
+
+    语义化标签：header、footer、section、nav、aside、article
+    增强型表单：input 的多个 type
+    新增表单元素：datalist、keygen、output
+    新增表单属性：placehoder、required、min 和 max
+    音频视频：audio、video
+    canvas
+    地理定位
+    拖拽
+    本地存储：localStorage - 没有时间限制的数据存储；sessionStorage - 针对一个 session 的数据存储，当用户关闭浏览器窗口后，数据会被删除
+    新事件：onresize、ondrag、onscroll、onmousewheel、onerror、onplay、onpause
+    WebSocket：单个 TCP 连接上进行全双工通讯的协议
+
+css3
+
+      选择器
+      背景和边框
+      文本效果
+      2D/3D 转换
+      动画、过渡
+      多列布局
+      用户界面
+
+```css
+     :last-child /* 选择元素最后一个孩子 */
+:first-child /* 选择元素第一个孩子 */
+:nth-child(1) /* 按照第几个孩子给它设置样式 */
+:nth-child(even) /* 按照偶数 */
+:nth-child(odd)  /* 按照奇数 */
+:disabled /* 选择每个禁用的E元素 */
+:checked /* 选择每个被选中的E元素 */
+:not(selector) /* 选择非 selector 元素的每个元素 */
+::selection /* 选择被用户选取的元素部分 */
+```
+
+2D/3D 转换
+
+2D/3D 转换
+2D 转换（transform）
+translate()：元素从其当前位置移动，根据给定的 left（x 坐标） 和 top（y 坐标） 位置参数。 transform: translate(50px, 100px);
+rotate()：元素顺时针旋转给定的角度。若为负值，元素将逆时针旋转。transform: rotate(30deg);
+scale()：元素的尺寸会增加或减少，根据给定的宽度（X 轴）和高度（Y 轴）参数，也可以一个值（宽高）。transform: scale(2,4);
+skew()：元素翻转给定的角度，根据给定的水平线（X 轴）和垂直线（Y 轴）参数。transform: skew(30deg, 20deg);
+matrix()： 把所有 2D 转换方法组合在一起，需要六个参数，包含数学函数，允许您：旋转、缩放、移动以及倾斜元素。transform:matrix(0.866,0.5,-0.5,0.866,0,0);
+
+    3D 转换
+    rotateX()：元素围绕其 X 轴以给定的度数进行旋转。transform: rotateX(120deg);
+    rotateY()：元素围绕其 Y 轴以给定的度数进行旋转。transform: rotateY(130deg);
+    perspective：规定 3D 元素的透视效果
+
+动画、过渡
+过渡效果（transition），使页面变化更平滑，以下参数可直接写在 transition 后面
+transition-property ：执行动画对应的属性，例如 color，background 等，可以使用 all 来指定所有的属性。
+transition-duration：过渡动画的一个持续时间。
+transition-timing-function：在延续时间段，动画变化的速率，常见的有：ease | linear | ease-in | ease-out | ease-in-out | cubic-bezier
+transition-delay：延迟多久后开始动画
+
+动画（animation）
+先定义 @keyframes 规则（0%，100% | from，to）
+然后定义 animation，以下参数可直接写在 animation 后面
+animation-name: 定义动画名称
+animation-duration: 指定元素播放动画所持续的时间长
+animation-timing-function: ease | linear | ease-in | ease-out | ease-in-out | cubic-bezier(, , , )： 指元素根据时间的推进来改变属性值的变换速率，即动画的播放方式
+animation-delay: 指定元素动画开始时间
+animation-iteration-count: infinite | number：指定元素播放动画的循环次数
+animation-direction: normal | alternate： 指定元素动画播放的方向，其只有两个值，默认值为 normal，如果设置为 normal 时，动画的每次循环都是向前播放；另一个值是 alternate，规定动画在下一周期逆向地播放（来去播放）
+animation-play-state: running | paused ：控制元素动画的播放状态
+
+多列布局
+通过 CSS3，能够创建多个列来对文本进行布局
+
+column-count: 规定元素应该被分隔的列数
+column-gap: 规定列之间的间隔
+column-rule: 设置列之间的宽度、样式和颜色规则
+用户界面
+CSS3 中，新的用户界面特性包括重设元素尺寸、盒尺寸以及轮廓等
+
+resize
+box-sizing
+outline-offset
+
+# CSS 兼容内核
+
+-moz-：代表 FireFox 浏览器私有属性
+-ms-：代表 IE 浏览器私有属性
+-webkit-：代表 safari、chrome 浏览器私有属性
+-o-：代表 opera 浏览器私有属性
