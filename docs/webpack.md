@@ -190,6 +190,9 @@ Loader 在 module.rules 中配置，作为模块的解析规则，类型为数�
 
 Plugin 在 plugins 中单独配置，类型为数组，每一项是一个 Plugin 的实例，参数都通过构造函数传入。
 
+如果把 webpack 打包构建的流程比作一条生产线，那么插件就像是插入到生产线中的一个功能，在特定的时机对生产线上的资源做处理。
+webpack 在运行过程中会广播事件，插件只需要监听它所关心的事件，就能加入到这条生产线中，去改变生产线的运作。 webpack 通过 Tapable 来组织这条复杂的生产线。 webpack 的事件流机制保证了插件的有序性，使得整个系统扩展性很好。
+
 # 3.Webpack 构建流程简单说一下
 
 Webpack 的运行流程是一个串行的过程，从启动到结束会依次执行以下流程：
@@ -742,3 +745,20 @@ module.exports = {
       使用更好的算法和默认值改进长期缓存（long-term caching）；
       清理内部结构而不引入任何破坏性的变化；
       引入一些breaking changes，以便尽可能长的使用v5版本。
+
+# chunk、bundle 与 moudle
+
+module、chunk、bundle 这三个都可以理解为文件，区别在于：我们直接写出来的是 module，webpack 处理时是 chunk，最后生成浏览器可以直接运行的是 bundle。也可以这样理解，module，chunk 和 bundle 其实就是同一份逻辑代码在不同转换场景下的三个名字。
+
+# compiler、complication
+
+compiler
+可以理解为 webpack 编译的调度中心，是一个编译器实例，在 compiler 对象中记录了完整的 webpack 环境信息，在 webpack 的每个进程中，compiler 只会生成一次。（举例，npm run dev 一次只有一个 compiler)
+complication
+是 compiler 的生命周期内一个核心对象，它包含了一次构建过程中所有的数据(modules、chunks、assets)。也就是说一次构建过程对应一个 complication 实例。（举例，比如热更新的时候，webpack 会监听本地文件改变然后重新生成一个 complication）
+
+# compiler 几个重要的钩子：
+
+    make🛠：在钩子的回调中有开始读取 webpack 配置文件的逻辑
+    emit🏹：在钩子的回调中执行生成文件（也就是 bundle）的逻辑
+    done🔚：文件已写入文件系统后触发这个钩子
