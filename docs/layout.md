@@ -843,7 +843,7 @@ height: 50px; background-color: pink; margin-bottom: 50px; margin-left: 30%; }
 # 27.margin 和 padding 分别适合什么场景使用？
 
 （1）、需要在 border 外侧添加空白且空白处不需要背景（色），或上下相连的两个盒子之间的空白需要相互抵消时，可以使用 margin；
-（2）、需要在 border 内侧添加空白且空白处需要背景（色），或上下相连的两个盒子之间的空白，希望等于两者之和时，可以使用 padding。
+（2）、需要在 border 内侧添加空白且空白处需要背景（色），或上下相连的两个盒子之间的空白，希望等于两者 时，可以使用 padding。
 
 # 28.伪元素和伪类的区别和作用？
 
