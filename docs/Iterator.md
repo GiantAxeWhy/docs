@@ -20,21 +20,21 @@ Iterator 的遍历过程是这样的。
 下面是一个模拟 next 方法返回值的例子。
 
 ```js
-var it = makeIterator(["a", "b"]);
+var it = makeIterator(['a', 'b'])
 
-it.next(); // { value: "a", done: false }
-it.next(); // { value: "b", done: false }
-it.next(); // { value: undefined, done: true }
+it.next() // { value: "a", done: false }
+it.next() // { value: "b", done: false }
+it.next() // { value: undefined, done: true }
 
 function makeIterator(array) {
-  var nextIndex = 0;
+  var nextIndex = 0
   return {
     next: function () {
       return nextIndex < array.length
         ? { value: array[nextIndex++], done: false }
-        : { value: undefined, done: true };
+        : { value: undefined, done: true }
     },
-  };
+  }
 }
 ```
 
@@ -50,35 +50,35 @@ next 方法返回一个对象，表示当前数据成员的信息。这个对象
 
 ```js
 function makeIterator(array) {
-  var nextIndex = 0;
+  var nextIndex = 0
   return {
     next: function () {
       return nextIndex < array.length
         ? { value: array[nextIndex++] }
-        : { done: true };
+        : { done: true }
     },
-  };
+  }
 }
 ```
 
 由于 Iterator 只是把接口规格加到数据结构之上，所以，遍历器与它所遍历的那个数据结构，实际上是分开的，完全可以写出没有对应数据结构的遍历器对象，或者说用遍历器对象模拟出数据结构。下面是一个无限运行的遍历器对象的例子。
 
 ```js
-var it = idMaker();
+var it = idMaker()
 
-it.next().value; // 0
-it.next().value; // 1
-it.next().value; // 2
+it.next().value // 0
+it.next().value // 1
+it.next().value // 2
 // ...
 
 function idMaker() {
-  var index = 0;
+  var index = 0
 
   return {
     next: function () {
-      return { value: index++, done: false };
+      return { value: index++, done: false }
     },
-  };
+  }
 }
 ```
 
@@ -97,11 +97,11 @@ const obj = {
         return {
           value: 1,
           done: true,
-        };
+        }
       },
-    };
+    }
   },
-};
+}
 ```
 
 上面代码中，对象 obj 是可遍历的（iterable），因为具有 Symbol.iterator 属性。执行这个属性，会返回一个遍历器对象。该对象的根本特征就是具有 next 方法。每次调用 next 方法，都会返回一个代表当前成员的信息对象，具有 value 和 done 两个属性。
@@ -120,13 +120,13 @@ NodeList 对象
 下面的例子是数组的 Symbol.iterator 属性。
 
 ```js
-let arr = ["a", "b", "c"];
-let iter = arr[Symbol.iterator]();
+let arr = ['a', 'b', 'c']
+let iter = arr[Symbol.iterator]()
 
-iter.next(); // { value: 'a', done: false }
-iter.next(); // { value: 'b', done: false }
-iter.next(); // { value: 'c', done: false }
-iter.next(); // { value: undefined, done: true }
+iter.next() // { value: 'a', done: false }
+iter.next() // { value: 'b', done: false }
+iter.next() // { value: 'c', done: false }
+iter.next() // { value: undefined, done: true }
 ```
 
 上面代码中，变量 arr 是一个数组，原生就具有遍历器接口，部署在 arr 的 Symbol.iterator 属性上面。所以，调用这个属性，就得到遍历器对象。
@@ -140,30 +140,30 @@ iter.next(); // { value: undefined, done: true }
 ```js
 class RangeIterator {
   constructor(start, stop) {
-    this.value = start;
-    this.stop = stop;
+    this.value = start
+    this.stop = stop
   }
 
   [Symbol.iterator]() {
-    return this;
+    return this
   }
 
   next() {
-    var value = this.value;
+    var value = this.value
     if (value < this.stop) {
-      this.value++;
-      return { done: false, value: value };
+      this.value++
+      return { done: false, value: value }
     }
-    return { done: true, value: undefined };
+    return { done: true, value: undefined }
   }
 }
 
 function range(start, stop) {
-  return new RangeIterator(start, stop);
+  return new RangeIterator(start, stop)
 }
 
 for (var value of range(0, 3)) {
-  console.log(value); // 0, 1, 2
+  console.log(value) // 0, 1, 2
 }
 ```
 
@@ -172,11 +172,10 @@ for (var value of range(0, 3)) {
 对于类似数组的对象（存在数值键名和 length 属性），部署 Iterator 接口，有一个简便方法，就是 Symbol.iterator 方法直接引用数组的 Iterator 接口。
 
 ```js
-NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
+NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator]
 // 或者
-NodeList.prototype[Symbol.iterator] = [][Symbol.iterator];
-
-[...document.querySelectorAll("div")]; // 可以执行了
+NodeList.prototype[Symbol.iterator] = [][Symbol.iterator]
+;[...document.querySelectorAll('div')] // 可以执行了
 ```
 
 NodeList 对象是类似数组的对象，本来就具有遍历接口，可以直接遍历。上面代码中，我们将它的遍历接口改成数组的 Symbol.iterator 属性，可以看到没有任何影响。
@@ -185,25 +184,24 @@ NodeList 对象是类似数组的对象，本来就具有遍历接口，可以�
 
 ```js
 let iterable = {
-  0: "a",
-  1: "b",
-  2: "c",
+  0: 'a',
+  1: 'b',
+  2: 'c',
   length: 3,
   [Symbol.iterator]: Array.prototype[Symbol.iterator],
-};
+}
 for (let item of iterable) {
-  console.log(item); // 'a', 'b', 'c'
+  console.log(item) // 'a', 'b', 'c'
 }
 ```
 
 如果 Symbol.iterator 方法对应的不是遍历器生成函数（即会返回一个遍历器对象），解释引擎将会报错。
 
 ```js
-var obj = {};
+var obj = {}
 
-obj[Symbol.iterator] = () => 1;
-
-[...obj]; // TypeError: [] is not a function
+obj[Symbol.iterator] = () => 1
+;[...obj] // TypeError: [] is not a function
 ```
 
 上面代码中，变量 obj 的 Symbol.iterator 方法对应的不是遍历器生成函数，因此报错。
@@ -211,12 +209,12 @@ obj[Symbol.iterator] = () => 1;
 有了遍历器接口，数据结构就可以用 for...of 循环遍历（详见下文），也可以使用 while 循环遍历。
 
 ```js
-var $iterator = ITERABLE[Symbol.iterator]();
-var $result = $iterator.next();
+var $iterator = ITERABLE[Symbol.iterator]()
+var $result = $iterator.next()
 while (!$result.done) {
-  var x = $result.value;
+  var x = $result.value
   // ...
-  $result = $iterator.next();
+  $result = $iterator.next()
 }
 ```
 
@@ -236,12 +234,12 @@ while (!$result.done) {
 
 ```js
 // 例一
-var str = "hello";
-[...str]; //  ['h','e','l','l','o']
+var str = 'hello'
+;[...str] //  ['h','e','l','l','o']
 
 // 例二
-let arr = ["b", "c"];
-["a", ...arr, "d"];
+let arr = ['b', 'c']
+;['a', ...arr, 'd']
 // ['a', 'b', 'c', 'd']
 ```
 
@@ -256,19 +254,19 @@ yield\*后面跟的是一个可遍历的结构，它会调用该结构的遍历�
 
 ```js
 let generator = function* () {
-  yield 1;
-  yield* [2, 3, 4];
-  yield 5;
-};
+  yield 1
+  yield* [2, 3, 4]
+  yield 5
+}
 
-var iterator = generator();
+var iterator = generator()
 
-iterator.next(); // { value: 1, done: false }
-iterator.next(); // { value: 2, done: false }
-iterator.next(); // { value: 3, done: false }
-iterator.next(); // { value: 4, done: false }
-iterator.next(); // { value: 5, done: false }
-iterator.next(); // { value: undefined, done: true }
+iterator.next() // { value: 1, done: false }
+iterator.next() // { value: 2, done: false }
+iterator.next() // { value: 3, done: false }
+iterator.next() // { value: 4, done: false }
+iterator.next() // { value: 5, done: false }
+iterator.next() // { value: undefined, done: true }
 ```
 
 （4）其他场合
@@ -286,15 +284,15 @@ iterator.next(); // { value: undefined, done: true }
 字符串是一个类似数组的对象，也原生具有 Iterator 接口。
 
 ```js
-var someString = "hi";
-typeof someString[Symbol.iterator];
+var someString = 'hi'
+typeof someString[Symbol.iterator]
 // "function"
 
-var iterator = someString[Symbol.iterator]();
+var iterator = someString[Symbol.iterator]()
 
-iterator.next(); // { value: "h", done: false }
-iterator.next(); // { value: "i", done: false }
-iterator.next(); // { value: undefined, done: true }
+iterator.next() // { value: "h", done: false }
+iterator.next() // { value: "i", done: false }
+iterator.next() // { value: undefined, done: true }
 ```
 
 上面代码中，调用 Symbol.iterator 方法返回一个遍历器对象，在这个遍历器上可以调用 next 方法，实现对于字符串的遍历。
@@ -302,26 +300,25 @@ iterator.next(); // { value: undefined, done: true }
 可以覆盖原生的 Symbol.iterator 方法，达到修改遍历器行为的目的。
 
 ```js
-var str = new String("hi");
+var str = new String('hi')
 
-[...str]; // ["h", "i"]
+;[...str] // ["h", "i"]
 
 str[Symbol.iterator] = function () {
   return {
     next: function () {
       if (this._first) {
-        this._first = false;
-        return { value: "bye", done: false };
+        this._first = false
+        return { value: 'bye', done: false }
       } else {
-        return { done: true };
+        return { done: true }
       }
     },
     _first: true,
-  };
-};
-
-[...str]; // ["bye"]
-str; // "hi"
+  }
+}
+;[...str] // ["bye"]
+str // "hi"
 ```
 
 上面代码中，字符串 str 的 Symbol.iterator 方法被修改了，所以扩展运算符（...）返回的值变成了 bye，而字符串本身还是 hi。
@@ -333,24 +330,24 @@ Symbol.iterator()方法的最简单实现，还是使用下一章要介绍的 Ge
 ```js
 let myIterable = {
   [Symbol.iterator]: function* () {
-    yield 1;
-    yield 2;
-    yield 3;
+    yield 1
+    yield 2
+    yield 3
   },
-};
-[...myIterable]; // [1, 2, 3]
+}
+;[...myIterable] // [1, 2, 3]
 
 // 或者采用下面的简洁写法
 
 let obj = {
   *[Symbol.iterator]() {
-    yield "hello";
-    yield "world";
+    yield 'hello'
+    yield 'world'
   },
-};
+}
 
 for (let x of obj) {
-  console.log(x);
+  console.log(x)
 }
 // "hello"
 // "world"
@@ -371,17 +368,17 @@ for...of 循环可以使用的范围包括数组、Set 和 Map 结构、某些�
 数组原生具备 iterator 接口（即默认部署了 Symbol.iterator 属性），for...of 循环本质上就是调用这个接口产生的遍历器，可以用下面的代码证明。
 
 ```js
-const arr = ["red", "green", "blue"];
+const arr = ['red', 'green', 'blue']
 
 for (let v of arr) {
-  console.log(v); // red green blue
+  console.log(v) // red green blue
 }
 
-const obj = {};
-obj[Symbol.iterator] = arr[Symbol.iterator].bind(arr);
+const obj = {}
+obj[Symbol.iterator] = arr[Symbol.iterator].bind(arr)
 
 for (let v of obj) {
-  console.log(v); // red green blue
+  console.log(v) // red green blue
 }
 ```
 
@@ -390,25 +387,25 @@ for (let v of obj) {
 for...of 循环可以代替数组实例的 forEach 方法。
 
 ```js
-const arr = ["red", "green", "blue"];
+const arr = ['red', 'green', 'blue']
 
 arr.forEach(function (element, index) {
-  console.log(element); // red green blue
-  console.log(index); // 0 1 2
-});
+  console.log(element) // red green blue
+  console.log(index) // 0 1 2
+})
 ```
 
 JavaScript 原有的 for...in 循环，只能获得对象的键名，不能直接获取键值。ES6 提供 for...of 循环，允许遍历获得键值。
 
 ```js
-var arr = ["a", "b", "c", "d"];
+var arr = ['a', 'b', 'c', 'd']
 
 for (let a in arr) {
-  console.log(a); // 0 1 2 3
+  console.log(a) // 0 1 2 3
 }
 
 for (let a of arr) {
-  console.log(a); // a b c d
+  console.log(a) // a b c d
 }
 ```
 
@@ -417,15 +414,15 @@ for (let a of arr) {
 for...of 循环调用遍历器接口，数组的遍历器接口只返回具有数字索引的属性。这一点跟 for...in 循环也不一样。
 
 ```js
-let arr = [3, 5, 7];
-arr.foo = "hello";
+let arr = [3, 5, 7]
+arr.foo = 'hello'
 
 for (let i in arr) {
-  console.log(i); // "0", "1", "2", "foo"
+  console.log(i) // "0", "1", "2", "foo"
 }
 
 for (let i of arr) {
-  console.log(i); //  "3", "5", "7"
+  console.log(i) //  "3", "5", "7"
 }
 ```
 
@@ -436,19 +433,19 @@ for (let i of arr) {
 ```js
 let es6 = {
   edition: 6,
-  committee: "TC39",
-  standard: "ECMA-262",
-};
+  committee: 'TC39',
+  standard: 'ECMA-262',
+}
 
 for (let e in es6) {
-  console.log(e);
+  console.log(e)
 }
 // edition
 // committee
 // standard
 
 for (let e of es6) {
-  console.log(e);
+  console.log(e)
 }
 
 // TypeError: es6[Symbol.iterator] is not a function
@@ -460,23 +457,23 @@ for (let e of es6) {
 
 ```js
 for (var key of Object.keys(someObject)) {
-  console.log(key + ": " + someObject[key]);
+  console.log(key + ': ' + someObject[key])
 }
 ```
 
 另一个方法是使用 Generator 函数将对象重新包装一下。
 
 ```js
-const obj = { a: 1, b: 2, c: 3 };
+const obj = { a: 1, b: 2, c: 3 }
 
 function* entries(obj) {
   for (let key of Object.keys(obj)) {
-    yield [key, obj[key]];
+    yield [key, obj[key]]
   }
 }
 
 for (let [key, value] of entries(obj)) {
-  console.log(key, "->", value);
+  console.log(key, '->', value)
 }
 // a -> 1
 // b -> 2
@@ -489,7 +486,7 @@ for (let [key, value] of entries(obj)) {
 
 ```js
 for (var index = 0; index < myArray.length; index++) {
-  console.log(myArray[index]);
+  console.log(myArray[index])
 }
 ```
 
@@ -497,8 +494,8 @@ for (var index = 0; index < myArray.length; index++) {
 
 ```js
 myArray.forEach(function (value) {
-  console.log(value);
-});
+  console.log(value)
+})
 ```
 
 这种写法的问题在于，无法中途跳出 forEach 循环，break 命令或 return 命令都不能奏效。
@@ -507,7 +504,7 @@ for...in 循环可以遍历数组的键名。
 
 ```js
 for (var index in myArray) {
-  console.log(myArray[index]);
+  console.log(myArray[index])
 }
 ```
 
@@ -522,7 +519,7 @@ for...of 循环相比上面几种做法，有一些显著的优点。
 
 ```js
 for (let value of myArray) {
-  console.log(value);
+  console.log(value)
 }
 ```
 
@@ -533,9 +530,163 @@ for (let value of myArray) {
 
 ```js
 for (var n of fibonacci) {
-  if (n > 1000) break;
-  console.log(n);
+  if (n > 1000) break
+  console.log(n)
 }
 ```
 
 上面的例子，会输出斐波纳契数列小于等于 1000 的项。如果当前项大于 1000，就会使用 break 语句跳出 for...of 循环。
+
+## for 和 foreach 的区别
+
+for 循环是 js 提出时就有的循环方法。forEach 是 ES5 提出的，挂载在可迭代对象原型上的方法，例如 Array Set Map。
+
+forEach 是一个迭代器，负责遍历可迭代对象。那么遍历，迭代，可迭代对象分别是什么呢。
+
+    遍历：指的对数据结构的每一个成员进行有规律的且为一次访问的行为。
+    迭代：迭代是递归的一种特殊形式，是迭代器提供的一种方法，默认情况下是按照一定顺序逐个访问数据结构成员。迭代也是一种遍历行为。
+    可迭代对象：ES6中引入了 iterable 类型，Array Set Map String arguments NodeList 都属于 iterable，他们特点就是都拥有 [Symbol.iterator] 方法，包含他的对象被认为是可迭代的 iterable。
+
+在了解这些后就知道 forEach 其实是一个迭代器，他与 for 循环本质上的区别是 forEach 是负责遍历（Array Set Map）可迭代对象的，而 for 循环是一种循环机制，只是能通过它遍历出数组。
+
+再来聊聊究竟什么是迭代器，还记得之前提到的 Generator 生成器，当它被调用时就会生成一个迭代器对象（Iterator Object），它有一个 .next()方法，每次调用返回一个对象{value:value,done:Boolean}，value 返回的是 yield 后的返回值，当 yield 结束，done 变为 true，通过不断调用并依次的迭代访问内部的值。
+
+迭代器是一种特殊对象。ES6 规范中它的标志是返回对象的 next() 方法，迭代行为判断在 done 之中。在不暴露内部表示的情况下，迭代器实现了遍历。看代码
+
+```js
+let arr = [1, 2, 3, 4] // 可迭代对象
+let iterator = arr[Symbol.iterator]() // 调用 Symbol.iterator 后生成了迭代器对象
+console.log(iterator.next()) // {value: 1, done: false}  访问迭代器对象的next方法
+console.log(iterator.next()) // {value: 2, done: false}
+console.log(iterator.next()) // {value: 3, done: false}
+console.log(iterator.next()) // {value: 4, done: false}
+console.log(iterator.next()) // {value: undefined, done: true}
+```
+
+我们看到了。只要是可迭代对象，调用内部的 Symbol.iterator 都会提供一个迭代器，并根据迭代器返回的 next 方法来访问内部，这也是 for...of 的实现原理。
+
+把调用 next 方法返回对象的 value 值并保存在 item 中，直到 value 为 undefined 跳出循环，所有可迭代对象可供 for...of 消费。 再来看看其他可迭代对象：
+
+```js
+function num(params) {
+  console.log(arguments) // Arguments(6) [1, 2, 3, 4, callee: ƒ, Symbol(Symbol.iterator): ƒ]
+  let iterator = arguments[Symbol.iterator]()
+  console.log(iterator.next()) // {value: 1, done: false}
+  console.log(iterator.next()) // {value: 2, done: false}
+  console.log(iterator.next()) // {value: 3, done: false}
+  console.log(iterator.next()) // {value: 4, done: false}
+  console.log(iterator.next()) // {value: undefined, done: true}
+}
+num(1, 2, 3, 4)
+
+let set = new Set('1234')
+set.forEach((item) => {
+  console.log(item) // 1 2 3 4
+})
+let iterator = set[Symbol.iterator]()
+console.log(iterator.next()) // {value: 1, done: false}
+console.log(iterator.next()) // {value: 2, done: false}
+console.log(iterator.next()) // {value: 3, done: false}
+console.log(iterator.next()) // {value: 4, done: false}
+console.log(iterator.next()) // {value: undefined, done: true}
+```
+
+所以我们也能很直观的看到可迭代对象中的 Symbol.iterator 属性被调用时都能生成迭代器，而 forEach 也是生成一个迭代器，在内部的回调函数中传递出每个元素的值。
+（感兴趣的同学可以搜下 forEach 源码， Array Set Map 实例上都挂载着 forEach ，但网上的答案大多数是通过 length 判断长度， 利用 for 循环机制实现的。但在 Set Map 上使用会报错，所以我认为是调用的迭代器，不断调用 next，传参到回调函数。）
+
+## foreach 的语法区别
+
+      forEach 的参数。
+      forEach 的中断。
+      forEach 删除自身元素，index不可被重置。
+      for 循环可以控制循环起点。
+
+### 传参
+
+forEach 的参数
+我们真正了解 forEach 的完整传参内容吗？它大概是这样：
+
+```js
+arr.forEach((self, index, arr) => {}, this)
+```
+
+self： 数组当前遍历的元素，默认从左往右依次获取数组元素。
+index： 数组当前元素的索引，第一个元素索引为 0，依次类推。
+arr： 当前遍历的数组。
+this： 回调函数中 this 指向。
+
+```js
+let arr = [1, 2, 3, 4]
+let person = {
+  name: '技术直男星辰',
+}
+arr.forEach(function (self, index, arr) {
+  console.log(`当前元素为${self}索引为${index},属于数组${arr}`)
+  console.log((this.name += '真帅'))
+}, person)
+```
+
+### forEach 的中断
+
+在 js 中有 break return continue 对函数进行中断或跳出循环的操作，我们在 for 循环中会用到一些中断行为，对于优化数组遍历查找是很好的，但由于 forEach 属于迭代器，只能按序依次遍历完成，所以不支持上述的中断行为。
+
+### forEach 删除自身元素，index 不可被重置
+
+在 forEach 中我们无法控制 index 的值，它只会无脑的自增直至大于数组的 length 跳出循环。所以也无法删除自身进行 index 重置，先看一个简单例子：
+
+```js
+let arr = [1, 2, 3, 4]
+arr.forEach((item, index) => {
+  console.log(item) // 1 2 3 4
+  index++
+})
+```
+
+index 不会随着函数体内部对它的增减而发生变化。在实际开发中，遍历数组同时删除某项的操作十分常见，在使用 forEach 删除时要注意。
+
+### for 循环可以控制循环起点
+
+如上文提到的 forEach 的循环起点只能为 0 不能进行人为干预，而 for 循环不同：
+
+```js
+let arr = [1, 2, 3, 4],
+  i = 1,
+  length = arr.length
+
+for (; i < length; i++) {
+  console.log(arr[i]) // 2 3 4
+}
+```
+
+那之前的数组遍历并删除滋生的操作就可以写成
+
+```js
+let arr = [1, 2, 1],
+  i = 0,
+  length = arr.length
+
+for (; i < length; i++) {
+  // 删除数组中所有的1
+  if (arr[i] === 1) {
+    arr.splice(i, 1)
+    //重置i，否则i会跳一位
+    i--
+  }
+}
+console.log(arr) // [2]
+//等价于
+var arr1 = arr.filter((index) => index !== 1)
+console.log(arr1) // [2]
+```
+
+# for 循环和 forEach 的性能区别
+
+在性能对比方面我们加入一个 map 迭代器，它与 filter 一样都是生成新数组。我们对比 for forEach map 的性能在浏览器环境中都是什么样的：
+性能比较：for > forEach > map
+在 chrome 62 和 Node.js v9.1.0 环境下：for 循环比 forEach 快 1 倍，forEach 比 map 快 20%左右。 原因分析
+
+      for：for循环没有额外的函数调用栈和上下文，所以它的实现最为简单。
+      forEach：对于forEach来说，它的函数签名中包含了参数和上下文，所以性能会低于 for 循环。
+      map：map 最慢的原因是因为 map 会返回一个新的数组，数组的创建和赋值会导致分配内存空间，因此会带来较大的性能开销。如果将map嵌套在一个循环中，便会带来更多不必要的内存消耗。
+
+当大家使用迭代器遍历一个数组时，如果不需要返回一个新数组却使用 map 是违背设计初衷的。在我前端合作开发时见过很多人只是为了遍历数组而用 map 的：
