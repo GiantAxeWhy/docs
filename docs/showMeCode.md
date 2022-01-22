@@ -3588,3 +3588,26 @@ function arrayToTree(items) {
   return result;
 }
 ```
+
+# 翻转字符串
+
+```js
+const reverseStr = (str) => [...str].reduce((a, v) => v + a);
+```
+
+# 用 promise 和 reduce 来实现异步流程控制
+
+```ts
+const createPromise = (id: number) => () =>
+  new Promise((resolve) =>
+    setTimeout(() => {
+      console.log(`${id}:${new Date()}`);
+    }, 1000)
+  );
+const task = [createPromise(1), createPromise(2), createPromise(3)];
+const doTask = task.reduce(
+  (pre, next: Function) => pre.then(() => next()),
+  Promise.resolve()
+);
+doTask.then(() => console.log("done"));
+```

@@ -4,9 +4,7 @@
 
 > A magical documentation site generator.
 
-- Simple and lightweight
-- No statically built html files
-- Multiple themes
+- Any application that can be written in JavaScript,will eventually be written in JavaScript
 
 [GitHub](https://github.com/GiantAxeWhy/docs/)
 [Getting Started](#project)
