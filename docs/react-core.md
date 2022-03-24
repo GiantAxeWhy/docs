@@ -62,10 +62,13 @@ React 是由**Facebook**研发的、用于**解决 UI 复杂度**的开源**Java
 
 ```js
 const h1 = (
+  <>
   <h1>
     Hello world
     <span>1231</span>
   </h1>
+  <p></p>
+  <>
 );
 
 ReactDOM.render(h1, document.getElementById("root"));
@@ -206,7 +209,8 @@ ReactDOM.render(
 );
 
 //react组件小写会认为是普通的html元素
-const comp =<MyFuncComp> //使用组件生成的，仍然是React元素，变化的是type
+//使用组件生成的，仍然是React元素，变化的是type
+const comp =<MyFuncComp>
 ReactDOM.render(
   <div>
    {comp}
@@ -671,3 +675,334 @@ React 官方认为，某个数据的来源必须是单一的
    1. 真实的 DOM 构建完成，但还未实际渲染到页面中。
    2. 在该函数中，通常用于实现一些附加的 dom 操作
    3. 该函数的返回值，会作为 componentDidUpdate 的第三个参数
+
+```js
+import React, { Component } from "react";
+
+export default class NewLifeCycle extends Component {
+  state = {
+    n: this.props.n,
+  };
+
+  // static getDerivedStateFromProps(props, state) {
+  //     console.log("getDerivedStateFromProps");
+  //     // return null;//不改变当前状态
+  //     return { //用新的对象替换掉之前的状态
+  //         n: props.n
+  //     }
+  // }
+
+  getSnapshotBeforeUpdate = (prevProps, prevState) => {
+    console.log("getSnapshotBeforeUpdate");
+    return 132;
+  };
+
+  componentDidUpdate(prevProps, prevState, snap) {
+    console.log("componentDidUpdate", snap);
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>{this.state.n}</h1>
+        <p>
+          <button
+            onClick={() => {
+              this.setState({
+                n: this.state.n + 1,
+              });
+            }}
+          >
+            +1
+          </button>
+        </p>
+      </div>
+    );
+  }
+}
+```
+
+# mobx
+
+## observable 和 autorun
+
+```js
+import { observable, autorun } from "mobx";
+
+const value = observable(0);
+const number = observable(100);
+
+autorun(() => {
+  console.log(value.get());
+});
+
+value.set(1);
+value.set(2);
+number.set(101);
+```
+
+observable 可以用来观测一个数据，这个数据可以数字、字符串、数组、对象等类型(相关知识点具体会在后文中详述)，而当观测到的数据发生变化的时候，如果变化的值处在 autorun 中，那么 autorun 就会自动执行。
+上例中的 autorun 函数中，只对 value 值进行了操作，而并没有 number 值的什么事儿，所以 number.set(101)这步并不会触发 autorun，只有 value 的变化才触发了 autorun。
+
+## 计算属性——computed
+
+假如现在我们一个数字，但我们对它的值不感兴趣，而只关心这个数组是否为正数。这个时候我们就可以用到 computed 这个属性了。
+
+```js
+const number = observable(10);
+const plus = computed(() => number.get() > 0);
+
+autorun(() => {
+  console.log(plus.get());
+});
+
+number.set(-19);
+number.set(-1);
+number.set(1);
+```
+
+依次输出了 true，false，true。
+第一个 true 是 number 初始化值的时候，10>0 为 true 没有问题。
+第二个 false 将 number 改变为-19，输出 false，也没有问题。
+但是当-19 改变为-1 的时候，虽然 number 变了，但是 number 的改变实际上并没有改变 plus 的值，所以没有其它地方收到通知，因此也就并没有输出任何值。
+直到 number 重新变为 1 时才输出 true。
+
+```js
+const price = observable(199);
+const number = observable(15);
+
+//computed的其它简单例子
+const allPrice = computed(() => price.get() * number.get());
+```
+
+## action，runInAction 和严格模式（useStrict）
+
+mobx 推荐将修改被观测变量的行为放在 action 中。
+来看看以下例子:
+
+```js
+import { observable, action } from "mobx";
+class Store {
+  @observable number = 0;
+  @action add = () => {
+    this.number++;
+  };
+}
+
+const newStore = new Store();
+newStore.add();
+```
+
+以上例子使用了 ES7 的 decorator，在实际开发中非常建议用上它，它可以给你带来更多的便捷
+
+这个类中有一个 add 函数，用来将 number 的值加 1，也就是修改了被观测的变量，根据规范，我们要在这里使用 action 来修饰这个 add 函数。
+勇于动手的你也许会发现，就算我把@action 去掉，程序还是可以运行呀。
+这是因为现在我们使用的 Mobx 的非严格模式，如果在严格模式下，就会报错了。
+接下来让我们来启用严格模式
+
+嗯，Mobx 里启用严格模式的函数就是 useStrict，注意和原生 JS 的"use strict"不是一个东西。
+现在再去掉@action 就会报错了。
+实际开发的时候建议开起严格模式，这样不至于让你在各个地方很轻易地区改变你所需要的值，降低不确定性。
+action 的写法大概有如下几种(摘自 mobx 英文文档):
+
+action(fn)
+action(name, fn)
+@action classMethod() {}
+@action(name) classMethod () {}
+@action boundClassMethod = (args) => { body }
+@action(name) boundClassMethod = (args) => { body }
+@action.bound classMethod() {}
+@action.bound(function() {})
+
+可以看到，action 在修饰函数的同时，我们还可以给它设置一个 name，这个 name 应该没有什么太大的作用，但可以作为一个注释更好地让其他人理解这个 action 的意图。
+
+接下来说一个重点 action 只能影响正在运行的函数，而无法影响当前函数调用的异步操作
+比如官网中给了如下例子
+
+```js
+@action createRandomContact() {
+  this.pendingRequestCount++;
+  superagent
+    .get('https://randomuser.me/api/')
+    .set('Accept', 'application/json')
+    .end(action("createRandomContact-callback", (error, results) => {
+      if (error)
+        console.error(error);
+      else {
+        const data = JSON.parse(results.text).results[0];
+        const contact = new Contact(this, data.dob, data.name, data.login.username, data.picture);
+        contact.addTag('random-user');
+        this.contacts.push(contact);
+        this.pendingRequestCount--;
+      }
+  }));
+}
+```
+
+重点关注程序的第六行。在 end 中触发的回调函数，被 action 给包裹了，这就很好验证了上面加粗的那句话，action 无法影响当前函数调用的异步操作，而这个回调毫无疑问是一个异步操作，所以必须再用一个 action 来包裹住它，这样程序才不会报错。。
+
+当然如果你说是在非严格模式下……那当我没说吧。。
+
+如果你使用 async function 来处理业务，那么我们可以使用 runInAction 这个 API 来解决之前的问题。
+
+```js
+import { observable, action, useStrict, runInAction } from "mobx";
+useStrict(true);
+
+class Store {
+  @observable name = "";
+  @action load = async () => {
+    const data = await getData();
+    runInAction(() => {
+      this.name = data.name;
+    });
+  };
+}
+```
+
+你可以把 runInAction 有点类似 action(fn)()的语法糖，调用后，这个 action 方法会立刻执行。
+
+结合 React 使用
+在 React 中，我们一般会把和页面相关的数据放到 state 中，在需要改变这些数据的时候，我们会去用 setState 这个方法来进行改变。
+先设想一个最简单的场景，页面上有个数字 0 和一个按钮。点击按钮我要让这个数字增加 1，就让我们要用 Mobx 来处理这个试试。
+
+```js
+import React from "react";
+import { observable, useStrict, action } from "mobx";
+import { observer } from "mobx-react";
+useStrict(true);
+
+class MyState {
+  @observable num = 0;
+  @action addNum = () => {
+    this.num++;
+  };
+}
+
+const newState = new MyState();
+
+@observer
+export default class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <p>{newState.num}</p>
+        <button onClick={newState.addNum}>+1</button>
+      </div>
+    );
+  }
+}
+```
+
+上例中我们使用了一个 MyState 类，在这个类中定义了一个被观测的 num 变量和一个 action 函数 addNum 来改变这个 num 值。
+之后我们实例化一个对象，叫做 newState，之后在我的 React 组件中，我只需要用@observer 修饰一下组件类，便可以愉悦地使用这个 newState 对象中的值和函数了。
+
+跨组件交互
+在不使用其它框架、类库的情况下，React 要实现跨组件交互这一功能相对有些繁琐。通常我们需要在父组件上定义一个 state 和一个修改该 state 的函数。然后把 state 和这个函数分别传到两个子组件里，在逻辑简单，且子组件很少的时候可能还好，但当业务复杂起来后，这么写就非常繁琐，且难以维护。而用 Mobx 就可以很好地解决这个问题。来看看以下的例子
+
+```js
+class MyState {
+  @observable num1 = 0;
+  @observable num2 = 100;
+
+  @action addNum1 = () => {
+    this.num1++;
+  };
+  @action addNum2 = () => {
+    this.num2++;
+  };
+  @computed get total() {
+    return this.num1 + this.num2;
+  }
+}
+
+const newState = new MyState();
+
+const AllNum = observer((props) => (
+  <div>num1 + num2 = {props.store.total}</div>
+));
+
+const Main = observer((props) => (
+  <div>
+    <p>num1 = {props.store.num1}</p>
+    <p>num2 = {props.store.num2}</p>
+    <div>
+      <button onClick={props.store.addNum1}>num1 + 1</button>
+      <button onClick={props.store.addNum2}>num2 + 1</button>
+    </div>
+  </div>
+));
+
+@observer
+export default class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <Main store={newState} />
+        <AllNum store={newState} />
+      </div>
+    );
+  }
+}
+```
+
+有两个子组件，Main 和 AllNum (均采用无状态函数的方式声明的组件)
+在 MyState 中存放了这些组件要用到的所有状态和函数。
+之后只要在父组件需要的地方实例化一个 MyState 对象，需要用到数据的子组件，只需要将这个实例化的对象通过 props 传下去就好了。
+
+接下来看看网络请求的情况。
+
+```js
+useStrict(true);
+
+class MyState {
+  @observable data = null;
+  @action initData = async () => {
+    const data = await getData("xxx");
+    runInAction("说明一下这个action是干什么的。不写也可以", () => {
+      this.data = data;
+    });
+  };
+}
+```
+
+严格模式下，只能在 action 中修改数据，但是 action 只能影响到函数当前状态下的情景，也就是说在 await 之后发生的事情，这个 action 就修饰不到了，于是我们必须要使用了 runInAction(详细解释见上文)。
+当然如果你不开启严格模式，不写 runInAction 也不会报错。
+
+个人强烈建议开启严格模式，这样可以防止数据被任意修改，降低程序的不确定性
+
+关于@observer 的一些说明
+通常，在和 Mobx 数据有关联的时候，你需要给你的 React 组件加上@observer，你不必太担心性能上的问题，加上这个@observer 不会对性能产生太大的影响，而且@observer 还有一个类似于 pure render 的功能，甚至能起到性能上的一些优化。
+
+所谓 pure render 见下例:
+
+```js
+@observer
+export default class App extends React.Component {
+  state = {
+    a: 0,
+  };
+  add = () => {
+    this.setState({
+      a: this.state.a + 1,
+    });
+  };
+  render() {
+    return (
+      <div>
+        {this.state.a}
+        <button onClick={this.add}>+1</button>
+        <PureItem />
+      </div>
+    );
+  }
+}
+
+@observer
+class PureItem extends React.Component {
+  render() {
+    console.log("PureItem的render触发了");
+    return <div>你们的事情跟我没关系</div>;
+  }
+}
+```
