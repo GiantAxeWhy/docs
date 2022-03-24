@@ -2,9 +2,9 @@
 
   - [闭包](closure.md)
   - [原型](prototype.md)
-  - [项目经验](project.md)
+  <!-- - [项目经验](project.md) -->
   - [js 设计模式](stratrgy.md)
-  - [高频笔试](showMeCode.md)
+  <!-- - [高频笔试](showMeCode.md) -->
   - [promise 手写](promise.md)
   - [JavaScript 原型继承之精髓](constructor.md)
   - [引用、浅拷贝及深拷贝 到 Map、Set](weakMap.md)
